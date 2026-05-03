@@ -4,6 +4,7 @@ import { type ComponentType } from "react";
 import { Settings, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { isSupabaseConfigured } from "@/lib/supabase";
+import Image from "next/image";
 
 type NavItem = {
   id: string;
@@ -30,9 +31,16 @@ export function AppSidebar({
     <>
       <aside className="hidden md:flex md:w-64 md:flex-col md:bg-white md:px-4 md:py-5 md:shadow-[0_20px_60px_-30px_rgba(15,23,42,0.18)]">
         <div className="flex items-center gap-3 px-3">
-          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-indigo-600 shadow-sm shadow-indigo-200/80">
+          {/* <div className="flex h-11 w-11 items-center justify-center rounded-2xl shadow-sm shadow-indigo-200/80">
             <Sparkles className="h-5 w-5 text-white" />
-          </div>
+          </div> */}
+          <Image
+            src="/logo.png"
+            alt="ShopFlow Logo"
+            width={50}
+            height={50}
+            className="rounded-sm object-cover"
+          />
           <div>
             <p className="text-lg font-bold tracking-tight text-slate-900">
               ShopFlow

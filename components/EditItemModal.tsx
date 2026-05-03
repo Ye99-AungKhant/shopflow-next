@@ -10,6 +10,7 @@ type EditItemModalProps = {
     name: string;
     sku: string;
     price: number;
+    cost: number;
     stock_quantity: number;
   }) => void;
   isSubmitting?: boolean;
@@ -17,6 +18,7 @@ type EditItemModalProps = {
     name: string;
     sku: string;
     price: number;
+    cost: number;
     stock_quantity: number;
   };
 };
@@ -31,6 +33,7 @@ export function EditItemModal({
   const [name, setName] = useState(initialData.name);
   const [sku, setSku] = useState(initialData.sku);
   const [price, setPrice] = useState(initialData.price.toFixed(2));
+  const [cost, setCost] = useState(initialData.cost?.toFixed(2) ?? "0.00");
   const [stockQuantity, setStockQuantity] = useState(
     initialData.stock_quantity.toString(),
   );
@@ -41,6 +44,7 @@ export function EditItemModal({
       setName(initialData.name);
       setSku(initialData.sku);
       setPrice(initialData.price.toFixed(2));
+      setCost(initialData.cost?.toFixed(2) ?? "0.00");
       setStockQuantity(initialData.stock_quantity.toString());
     }
   }, [isOpen, initialData]);
@@ -51,6 +55,7 @@ export function EditItemModal({
       name: name.trim(),
       sku: sku.trim(),
       price: Number(price) || 0,
+      cost: Number(cost) || 0,
       stock_quantity: Number(stockQuantity) || 0,
     });
   };
@@ -135,6 +140,25 @@ export function EditItemModal({
                 step="0.01"
                 value={price}
                 onChange={(event) => setPrice(event.target.value)}
+                placeholder="0.00"
+                className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 pl-10 text-sm text-slate-900 outline-none transition-all duration-150 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
+              />
+            </div>
+          </label>
+
+          <label className="block">
+            <span className="mb-1 block text-xs font-semibold uppercase tracking-wider text-slate-500">
+              Cost
+            </span>
+            <div className="relative">
+              <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-slate-500">
+                $
+              </span>
+              <input
+                type="number"
+                step="0.01"
+                value={cost}
+                onChange={(event) => setCost(event.target.value)}
                 placeholder="0.00"
                 className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 pl-10 text-sm text-slate-900 outline-none transition-all duration-150 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
               />

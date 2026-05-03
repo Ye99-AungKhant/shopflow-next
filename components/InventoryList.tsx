@@ -18,7 +18,7 @@ import { InventoryItem, isSupabaseConfigured, supabase } from "../lib/supabase";
 import { ColumnDef, DataTable } from "./ui/DataTable";
 
 const tabs = ["All Items", "Active", "Low Stock", "Out of Stock"] as const;
-const pageSizeOptions = [1, 10, 50, 100] as const;
+const pageSizeOptions = [10, 50, 100] as const;
 
 type Tab = (typeof tabs)[number];
 
@@ -53,6 +53,7 @@ async function fetchInventory(): Promise<InventoryRow[]> {
       ...item,
       category: "General",
       stockStatus,
+      cost: item.cost ?? 0, // Ensure cost is included
     };
   });
 }
@@ -85,7 +86,8 @@ export function InventoryList() {
   const [activeTab, setActiveTab] = useState<Tab>("All Items");
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState<(typeof pageSizeOptions)[number]>(1);
+  const [pageSize, setPageSize] =
+    useState<(typeof pageSizeOptions)[number]>(10);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [activeMenuRow, setActiveMenuRow] = useState<string | null>(null);
   const [activeRow, setActiveRow] = useState<InventoryRow | null>(null);
@@ -117,7 +119,7 @@ export function InventoryList() {
       }
 
       const { data, error } = await supabase
-        .from<InventoryItem>("inventory")
+        .from("inventory")
         .insert([item])
         .select()
         .single();
@@ -152,7 +154,7 @@ export function InventoryList() {
       }
 
       const { data, error } = await supabase
-        .from<InventoryItem>("inventory")
+        .from("inventory")
         .update(payload.data)
         .eq("id", payload.id)
         .select()
@@ -314,6 +316,15 @@ export function InventoryList() {
       cellClassName: "text-sm text-slate-600",
     },
     {
+      header: "Cost",
+      cell: (row) => (
+        <span className="font-medium text-slate-900">
+          ${row.cost?.toFixed(2) ?? "0.00"}
+        </span>
+      ),
+      cellClassName: "text-sm",
+    },
+    {
       header: "Price",
       cell: (row) => (
         <span className="font-medium text-slate-900">
@@ -346,7 +357,7 @@ export function InventoryList() {
           </button>
 
           {activeMenuRow === row.id && (
-            <div className="absolute right-0 z-10 mt-2 w-48 overflow-hidden rounded-lg border border-slate-100 bg-white shadow-lg">
+            <div className="absolute right-0 mt-2 w-48 overflow-hidden rounded-lg border border-slate-100 bg-white shadow-lg">
               <button
                 type="button"
                 onClick={(e) => {
@@ -462,12 +473,21 @@ export function InventoryList() {
           setActiveRow(null);
         }}
         initialData={
-          activeRow ?? {
-            name: "",
-            sku: "",
-            price: 0,
-            stock_quantity: 0,
-          }
+          activeRow
+            ? {
+                name: activeRow.name,
+                sku: activeRow.sku ?? "",
+                price: activeRow.price,
+                cost: activeRow.cost ?? 0,
+                stock_quantity: activeRow.stock_quantity,
+              }
+            : {
+                name: "",
+                sku: "",
+                price: 0,
+                cost: 0,
+                stock_quantity: 0,
+              }
         }
         onSave={(product) =>
           activeRow &&

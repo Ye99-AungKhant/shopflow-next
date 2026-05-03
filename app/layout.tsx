@@ -16,6 +16,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "ShopFlow",
   description: "AI-powered order entry and management system for online shops.",
+  manifest: "/manifest.json",
 };
 
 export default function RootLayout({

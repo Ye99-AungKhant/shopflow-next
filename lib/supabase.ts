@@ -34,6 +34,7 @@ export type InventoryItem = {
   sku: string | null;
   stock_quantity: number;
   price: number;
+  cost: number; // Added cost field
   created_at: string;
 };
 

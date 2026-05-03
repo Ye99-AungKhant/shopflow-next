@@ -112,7 +112,7 @@ export function AiOrderEntry({ onOrderAdded }: { onOrderAdded: () => void }) {
         .select("id, name, price");
       const inventoryContext =
         inventoryData && inventoryData.length > 0
-          ? `Available inventory (id: name: price):\n${inventoryData.map((i) => `${i.id}: ${i.name} ($${i.price})`).join("\n")}`
+          ? `Available inventory (id: name: price):\n${inventoryData.map((i: any) => `${i.id}: ${i.name} ($${i.price})`).join("\n")}`
           : "";
 
       const prompt = [
