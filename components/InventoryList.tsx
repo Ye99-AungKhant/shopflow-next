@@ -16,6 +16,7 @@ import { DeleteItemModal } from "./DeleteItemModal";
 import { EditItemModal } from "./EditItemModal";
 import { InventoryItem, isSupabaseConfigured, supabase } from "../lib/supabase";
 import { ColumnDef, DataTable } from "./ui/DataTable";
+import Image from "next/image";
 
 const tabs = ["All Items", "Active", "Low Stock", "Out of Stock"] as const;
 const pageSizeOptions = [10, 50, 100] as const;
@@ -300,9 +301,16 @@ export function InventoryList() {
       header: "Product",
       cell: (row) => (
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-100 text-slate-400">
-            <span className="text-sm font-semibold">{row.name.charAt(0)}</span>
-          </div>
+          {/* <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-100 text-slate-400">
+            <span className="text-sm font-semibold">{row.}</span>
+          </div> */}
+          <Image
+            src={row.photo_url ?? "/placeholder.png"}
+            alt={row.name}
+            width={40}
+            height={40}
+            className="rounded-xl object-cover"
+          />
           <div>
             <p className="text-sm font-semibold text-slate-900">{row.name}</p>
             <p className="text-xs text-slate-400">{row.category}</p>

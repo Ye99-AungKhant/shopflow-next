@@ -2,6 +2,7 @@
 import { FormEvent, useRef, useState } from "react";
 import { ImagePlus, Plus } from "lucide-react";
 import { Modal } from "./ui/Modal";
+import { supabase } from "../lib/supabase";
 
 type AddItemModalProps = {
   isOpen: boolean;
@@ -12,6 +13,7 @@ type AddItemModalProps = {
     price: number;
     cost: number;
     stock_quantity: number;
+    photo_url?: string;
   }) => void;
   isSubmitting?: boolean;
 };
@@ -27,17 +29,39 @@ export function AddItemModal({
   const [price, setPrice] = useState("");
   const [cost, setCost] = useState("");
   const [stockQuantity, setStockQuantity] = useState("");
+  const [file, setFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-
+    let photo_url: string | undefined = undefined;
+    if (file) {
+      setUploading(true);
+      const fileExt = file.name.split(".").pop();
+      const fileName = `${Date.now()}-${Math.random()
+        .toString(36)
+        .substring(2, 8)}.${fileExt}`;
+      const { data, error } = await supabase.storage
+        .from("product-images")
+        .upload(fileName, file);
+      setUploading(false);
+      if (error) {
+        alert("Image upload failed: " + error.message);
+        return;
+      }
+      const { data: publicUrlData } = supabase.storage
+        .from("product-images")
+        .getPublicUrl(fileName);
+      photo_url = publicUrlData?.publicUrl;
+    }
     onAdd({
       name: name.trim(),
       sku: sku.trim(),
       price: Number(price) || 0,
       cost: Number(cost) || 0,
       stock_quantity: Number(stockQuantity) || 0,
+      photo_url,
     });
   };
 
@@ -64,7 +88,15 @@ export function AddItemModal({
           onDragOver={(event) => event.preventDefault()}
           onDrop={(event) => event.preventDefault()}
         >
-          <ImagePlus className="h-9 w-9 text-slate-400 transition group-hover:text-indigo-500" />
+          {file ? (
+            <img
+              src={URL.createObjectURL(file)}
+              alt="Preview"
+              className="h-20 w-20 rounded-xl object-cover"
+            />
+          ) : (
+            <ImagePlus className="h-9 w-9 text-slate-400 transition group-hover:text-indigo-500" />
+          )}
           <div>
             <p className="text-sm font-semibold text-slate-900">
               Click to upload or drag and drop
@@ -78,6 +110,7 @@ export function AddItemModal({
             type="file"
             accept="image/png,image/jpeg,image/gif,image/svg+xml"
             className="hidden"
+            onChange={(e) => setFile(e.target.files?.[0] || null)}
           />
         </div>
 
@@ -170,11 +203,11 @@ export function AddItemModal({
           </button>
           <button
             type="submit"
-            disabled={isSubmitting}
+            disabled={isSubmitting || uploading}
             className="inline-flex items-center justify-center rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-70"
           >
             <Plus className="mr-2 h-4 w-4" />
-            Add Product
+            {uploading ? "Uploading..." : "Add Product"}
           </button>
         </div>
       </form>

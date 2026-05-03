@@ -35,6 +35,7 @@ export type InventoryItem = {
   stock_quantity: number;
   price: number;
   cost: number; // Added cost field
+  photo_url?: string; // Add photo_url for item image
   created_at: string;
 };
 
