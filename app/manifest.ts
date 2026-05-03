@@ -8,8 +8,8 @@ export default function manifest(): MetadataRoute.Manifest {
       "AI-powered order entry and management system for online shops.",
     start_url: "/",
     display: "standalone",
+    theme_color: "#ffffff", // Change this to your app's background color
     background_color: "#ffffff",
-    theme_color: "#000000",
     icons: [
       {
         src: "/web-app-manifest-192x192.png",
