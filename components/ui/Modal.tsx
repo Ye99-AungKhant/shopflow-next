@@ -45,7 +45,7 @@ export function Modal({
       onClick={onClose}
     >
       <div
-        className={`w-full ${maxWidthClass} rounded-xl bg-white shadow-xl`}
+        className={`w-full ${maxWidthClass} max-h-[calc(100vh-2rem)] overflow-hidden rounded-xl bg-white shadow-xl flex flex-col`}
         onClick={(event) => event.stopPropagation()}
       >
         <div className="flex items-start justify-between gap-4 border-b border-slate-200 p-4">
@@ -61,7 +61,7 @@ export function Modal({
             <X className="h-4 w-4" />
           </button>
         </div>
-        {children}
+        <div className="overflow-y-auto">{children}</div>
       </div>
     </div>,
     document.body,

@@ -195,7 +195,7 @@ export function OrderList({ refreshTrigger }: { refreshTrigger: number }) {
       headerClassName: "text-right",
       cellClassName: "text-right",
       cell: (order) => (
-        <div className="relative inline-block text-left">
+        <div className="relative inline-block text-left z-50">
           <button
             onClick={(e) => {
               e.stopPropagation();

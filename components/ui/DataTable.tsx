@@ -58,7 +58,7 @@ export function DataTable<T>({
   keyExtractor,
 }: DataTableProps<T>) {
   return (
-    <div className="overflow-hidden rounded-xl bg-white shadow-sm">
+    <div className="overflow-visible rounded-xl bg-white shadow-sm">
       {isFetching && (
         <div className="border-b border-slate-200 bg-slate-50 px-6 py-3 text-sm text-slate-500">
           Refreshing data...
