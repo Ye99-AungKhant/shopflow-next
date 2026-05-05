@@ -21,10 +21,12 @@ export type Customer = {
 export type Order = {
   id: string;
   customer_id: string;
+  delivery_id: string;
   status: "pending" | "delivery" | "completed" | "canceled";
   total_price: number;
   created_at: string;
   customer?: Customer; // populated when joined
+  delivery?: Delivery; // populated when joined
   order_items?: OrderItem[]; // populated when joined
 };
 
@@ -47,5 +49,14 @@ export type OrderItem = {
   quantity: number;
   price: number;
   source: string;
+  created_at: string;
+};
+
+export type Delivery = {
+  id: string;
+  order_id: string;
+  name: string;
+  phone: string;
+  address?: string;
   created_at: string;
 };

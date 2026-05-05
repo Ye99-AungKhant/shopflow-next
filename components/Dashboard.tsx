@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { fetchDashboardData } from "../lib/dashboard";
 import { isSupabaseConfigured } from "../lib/supabase";
+import { span } from "motion/react-client";
 
 function formatCurrency(value: number) {
   return `$${value.toFixed(2)}`;
@@ -56,21 +57,30 @@ export function Dashboard({ refreshTrigger }: { refreshTrigger: number }) {
     },
     {
       label: "Orders",
-      value: String(data?.totalOrders ?? 0),
+      value: data?.totalOrders,
       trend: data?.trends.orders.label ?? "0% vs last week",
       trendDirection: data?.trends.orders.direction ?? "flat",
       icon: ShoppingCart,
     },
     {
+      label: "Inventory",
+      value: data?.inventory.totalProducts,
+      trend: "",
+      trendDirection: "",
+      icon: Package,
+      lowStock: data?.inventory.lowStock,
+      outOfStock: data?.inventory.outOfStock,
+    },
+    {
       label: "Customers",
-      value: String(data?.totalCustomers ?? 0),
+      value: data?.totalCustomers,
       trend: data?.trends.customers.label ?? "0% vs last week",
       trendDirection: data?.trends.customers.direction ?? "flat",
       icon: Users,
     },
     {
       label: "Completed",
-      value: String(data?.completedOrders ?? 0),
+      value: data?.completedOrders,
       trend: data?.trends.completed.label ?? "0% vs last week",
       trendDirection: data?.trends.completed.direction ?? "flat",
       icon: CheckCircle2,
@@ -82,6 +92,7 @@ export function Dashboard({ refreshTrigger }: { refreshTrigger: number }) {
       <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {kpiCards.map((card) => {
           const Icon = card.icon;
+          const isInventory = card.label === "Inventory";
           const TrendIcon =
             card.trendDirection === "down" ? ArrowDownRight : ArrowUpRight;
           const trendColor =
@@ -110,14 +121,35 @@ export function Dashboard({ refreshTrigger }: { refreshTrigger: number }) {
               <div className="mt-6">
                 <p className="text-4xl font-bold tracking-tight text-slate-900">
                   {card.value}
+                  <span className="ml-2 text-lg font-medium text-slate-400">
+                    {isInventory ? "Products" : ""}
+                  </span>
                 </p>
               </div>
 
-              <div
+              {/* <div
                 className={`mt-4 flex items-center gap-2 text-sm ${trendColor}`}
               >
                 <TrendIcon className="h-4 w-4" />
                 <span className="font-medium">{card.trend}</span>
+              </div> */}
+              <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
+                {isInventory ? (
+                  <>
+                    <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-xs font-bold text-amber-700 border border-amber-100">
+                      {card.lowStock} Low Stock
+                    </span>
+
+                    <span className="inline-flex items-center gap-1 rounded-full bg-rose-50 px-2 py-0.5 text-xs font-bold text-rose-700 border border-rose-100">
+                      {card.outOfStock} Out of Stock
+                    </span>
+                  </>
+                ) : (
+                  <div className={`flex items-center gap-2 ${trendColor}`}>
+                    <TrendIcon className="h-4 w-4" />
+                    <span className="font-medium">{card.trend}</span>
+                  </div>
+                )}
               </div>
             </div>
           );

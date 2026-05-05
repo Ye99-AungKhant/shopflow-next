@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from "motion/react";
 import {
   LayoutDashboard,
   PackageSearch,
+  Settings,
   ShoppingBag,
   Sparkles,
 } from "lucide-react";
@@ -13,6 +14,7 @@ import { InventoryList } from "../components/InventoryList";
 import { OrderList } from "../components/OrderList";
 import { AppHeader } from "../components/AppHeader";
 import { AppSidebar } from "../components/AppSidebar";
+import { SettingList } from "../components/SettingList";
 
 type NavItem = {
   id: string;
@@ -43,6 +45,13 @@ const navItems: NavItem[] = [
     icon: PackageSearch,
     header: "Inventory",
     subheader: "Manage product catalog, pricing, and stock levels.",
+  },
+  {
+    id: "settings",
+    label: "Settings",
+    icon: Settings,
+    header: "Settings",
+    subheader: "Configure app settings and preferences.",
   },
 ];
 
@@ -120,6 +129,18 @@ export default function App() {
                 transition={{ duration: 0.2 }}
               >
                 <InventoryList />
+              </motion.div>
+            )}
+
+            {activeTab.id === "settings" && (
+              <motion.div
+                key="settings"
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -12 }}
+                transition={{ duration: 0.2 }}
+              >
+                <SettingList refreshTrigger={refreshTrigger} />
               </motion.div>
             )}
 

@@ -16,6 +16,7 @@ import { DeleteItemModal } from "./DeleteItemModal";
 import { EditItemModal } from "./EditItemModal";
 import { InventoryItem, isSupabaseConfigured, supabase } from "../lib/supabase";
 import { ColumnDef, DataTable } from "./ui/DataTable";
+import { MobileDataTable } from "./ui/MobileDataTable";
 import Image from "next/image";
 
 const tabs = ["All Items", "Active", "Low Stock", "Out of Stock"] as const;
@@ -414,6 +415,113 @@ export function InventoryList() {
     },
   ];
 
+  const renderInventoryCard = (item: InventoryRow) => (
+    <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+      <div className="flex items-center justify-between mb-3 gap-3">
+        <div className="flex items-center gap-3 min-w-0">
+          <input
+            type="checkbox"
+            className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+          />
+          <div className="min-w-0">
+            <p className="truncate text-sm font-semibold text-slate-900">
+              {item.name}
+            </p>
+            <p className="truncate text-xs text-slate-500">
+              {item.sku ?? "No SKU"}
+            </p>
+          </div>
+        </div>
+        <div className="text-right">
+          <p className="text-sm font-semibold text-slate-900">
+            ${item.price.toFixed(2)}
+          </p>
+          <p className="text-xs text-slate-500">Cost ${item.cost.toFixed(2)}</p>
+        </div>
+      </div>
+
+      <div className="flex items-center gap-3 mb-3">
+        <Image
+          src={item.photo_url ?? "/placeholder.png"}
+          alt={item.name}
+          width={44}
+          height={44}
+          className="h-11 w-11 rounded-xl object-cover"
+        />
+        <div className="min-w-0">
+          <p className="text-sm font-medium text-slate-900">{item.category}</p>
+          <p className="text-xs text-slate-500">
+            {item.stock_quantity} in stock
+          </p>
+        </div>
+      </div>
+
+      <div className="flex items-center justify-between">
+        {renderStockBadge(item)}
+        <div className="relative inline-block text-left">
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              setActiveMenuRow((current) =>
+                current === item.id ? null : item.id,
+              );
+            }}
+            className="inline-flex h-9 w-9 items-center justify-center rounded-full text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+          >
+            <MoreHorizontal className="h-4 w-4" />
+          </button>
+
+          {activeMenuRow === item.id && (
+            <div className="absolute right-0 z-10 w-48 rounded-lg border border-slate-100 bg-white shadow-lg">
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setActiveMenuRow(null);
+                  setActiveRow(item);
+                  setIsAdjustStockOpen(true);
+                }}
+                className="flex w-full items-center gap-2 px-4 py-2 text-sm text-slate-700 transition hover:bg-slate-50"
+              >
+                <PackagePlus className="h-4 w-4" />
+                Adjust Stock
+              </button>
+              <div className="border-b border-slate-100" />
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setActiveMenuRow(null);
+                  setActiveRow(item);
+                  setIsEditItemOpen(true);
+                }}
+                className="flex w-full items-center gap-2 px-4 py-2 text-sm text-slate-700 transition hover:bg-slate-50"
+              >
+                <Pencil className="h-4 w-4" />
+                Edit Details
+              </button>
+              <div className="border-b border-slate-100" />
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setActiveMenuRow(null);
+                  setActiveRow(item);
+                  setIsDeleteItemOpen(true);
+                }}
+                className="flex w-full items-center gap-2 px-4 py-2 text-sm text-red-600 transition hover:bg-red-50"
+              >
+                <Trash2 className="h-4 w-4" />
+                Delete Item
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+
   if (!isSupabaseConfigured) {
     return (
       <div className="flex items-center justify-center h-full p-6 text-center text-slate-500 bg-white rounded-2xl m-4 border border-slate-200 border-dashed shadow-sm">
@@ -426,7 +534,7 @@ export function InventoryList() {
   }
 
   return (
-    <div className="p-6 space-y-6 bg-slate-50 min-h-full">
+    <div className="space-y-6 bg-slate-50 min-h-full">
       {toast ? (
         <div className="fixed right-4 top-4 z-50 pointer-events-none">
           <div
@@ -575,7 +683,7 @@ export function InventoryList() {
         </div>
       </div>
 
-      <div className="rounded-xl bg-white shadow-sm">
+      <div className="hidden md:block rounded-xl bg-white shadow-sm">
         <DataTable
           data={paginatedRows}
           columns={columns}
@@ -587,6 +695,29 @@ export function InventoryList() {
           endItem={endItem}
           totalCount={filteredRows.length}
           onPageChange={setPage}
+          emptyStateTitle={
+            isLoading ? "Loading inventory..." : "No matching products found"
+          }
+          emptyStateDescription={
+            isLoading
+              ? "Please wait while inventory loads."
+              : "Try adjusting filters or search."
+          }
+        />
+      </div>
+
+      <div className="block md:hidden">
+        <MobileDataTable
+          data={paginatedRows}
+          isFetching={isLoading}
+          page={page}
+          pageCount={pageCount}
+          startItem={startItem}
+          endItem={endItem}
+          totalCount={filteredRows.length}
+          onPageChange={setPage}
+          keyExtractor={(item) => item.id}
+          renderRow={renderInventoryCard}
           emptyStateTitle={
             isLoading ? "Loading inventory..." : "No matching products found"
           }

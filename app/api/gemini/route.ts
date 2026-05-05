@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { GoogleGenAI, Type } from "@google/genai";
 
 const SYSTEM_INSTRUCTION =
-  "You are an AI order entry assistant for an online shop. Extract order information from the user's message. If it's a valid order description, output high confidence, provide a friendly response acknowledging what was done or asking for clarification, and populate the order_data structure. Match product names to available inventory items when possible. If the user didn't specify a price, use the inventory price or a reasonable fallback. If the user did not describe an order, return low confidence and a conversational reply.";
+  "You are an AI order entry assistant for an online shop. Extract order information from the user's message. If it's a valid order description, output high confidence, provide a friendly response acknowledging what was done or asking for clarification, and populate the order_data structure. Match product names to available inventory items when possible. If the user didn't specify a price, use the inventory price or a reasonable fallback. If the order is for delivery, extract delivery details including recipient name, phone, and address. If the user did not describe an order, return low confidence and a conversational reply.";
 
 const orderSchema = {
   type: Type.OBJECT,
@@ -48,6 +48,17 @@ const orderSchema = {
             },
             required: ["name", "quantity", "price"],
           },
+        },
+        delivery: {
+          type: Type.OBJECT,
+          description:
+            "Delivery details if the order is for delivery. Include recipient name, phone, and address.",
+          properties: {
+            name: { type: Type.STRING },
+            phone: { type: Type.STRING },
+            address: { type: Type.STRING },
+          },
+          required: ["name", "phone"],
         },
         status: {
           type: Type.STRING,

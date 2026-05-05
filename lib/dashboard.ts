@@ -61,6 +61,11 @@ export type DashboardData = {
   revenueData: DashboardRevenuePoint[];
   topCustomers: DashboardCustomer[];
   popularProducts: DashboardProduct[];
+  inventory: {
+    totalProducts: number;
+    lowStock: number;
+    outOfStock: number;
+  };
 };
 
 const customerColors = [
@@ -136,6 +141,11 @@ export async function fetchDashboardData(): Promise<DashboardData> {
       revenueData: [],
       topCustomers: [],
       popularProducts: [],
+      inventory: {
+        totalProducts: 0,
+        lowStock: 0,
+        outOfStock: 0,
+      },
     };
   }
 
@@ -308,6 +318,21 @@ export async function fetchDashboardData(): Promise<DashboardData> {
     }
   }
 
+  const { totalProducts, lowStock, outOfStock } = inventory.reduce(
+    (acc, item) => {
+      acc.totalProducts++;
+
+      if (item.stock_quantity === 0) {
+        acc.outOfStock++;
+      } else if (item.stock_quantity <= 5) {
+        acc.lowStock++;
+      }
+
+      return acc;
+    },
+    { totalProducts: 0, lowStock: 0, outOfStock: 0 },
+  );
+
   return {
     totalCost,
     totalRevenue,
@@ -324,5 +349,10 @@ export async function fetchDashboardData(): Promise<DashboardData> {
     revenueData,
     topCustomers,
     popularProducts,
+    inventory: {
+      totalProducts,
+      lowStock,
+      outOfStock,
+    },
   };
 }
