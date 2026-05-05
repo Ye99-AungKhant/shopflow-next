@@ -324,7 +324,7 @@ export async function fetchDashboardData(): Promise<DashboardData> {
 
       if (item.stock_quantity === 0) {
         acc.outOfStock++;
-      } else if (item.stock_quantity <= 5) {
+      } else if (item.stock_quantity <= 20) {
         acc.lowStock++;
       }
 
