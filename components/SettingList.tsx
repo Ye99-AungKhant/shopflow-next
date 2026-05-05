@@ -8,6 +8,7 @@ import {
   Eye,
   MoreHorizontal,
   Package,
+  Plus,
   Printer,
   Search,
   Trash2,
@@ -22,10 +23,11 @@ import {
   type OrderListRow,
   type OrderStatus,
 } from "../lib/orders";
-import { isSupabaseConfigured } from "../lib/supabase";
+import { Delivery, isSupabaseConfigured } from "../lib/supabase";
 import { cn, getStatusClass, getStatusLabel } from "../lib/utils";
 import { ColumnDef, DataTable } from "./ui/DataTable";
 import { MobileDataTable } from "./ui/MobileDataTable";
+import { useGetDeliveries } from "@/hooks/delivery";
 
 type FilterTab = string;
 const pageSizeOptions = [10, 50, 100] as const;
@@ -43,7 +45,7 @@ const tabs: { id: FilterTab; label: string }[] = [
 ];
 
 export function SettingList({ refreshTrigger }: { refreshTrigger: number }) {
-  const [activeTab, setActiveTab] = useState<FilterTab>("all");
+  const [activeTab, setActiveTab] = useState<FilterTab>("category");
   const [searchValue, setSearchValue] = useState("");
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] =
@@ -103,15 +105,52 @@ export function SettingList({ refreshTrigger }: { refreshTrigger: number }) {
     enabled: isSupabaseConfigured,
     placeholderData: (previousData) => previousData,
   });
+
+  const {
+    data: deliveries,
+    isLoading: isLoadingDelivery,
+    isFetched: isFetchedDelivery,
+  } = useGetDeliveries();
   const orders = data?.rows ?? [];
   const totalCount = data?.totalCount ?? 0;
   const pageCount = data?.pageCount ?? 0;
   const startItem = totalCount === 0 ? 0 : (page - 1) * pageSize + 1;
   const endItem = totalCount === 0 ? 0 : startItem + orders.length - 1;
 
+  const deliColumns: ColumnDef<Delivery>[] = [
+    {
+      header: "Name",
+      cell: (deli) => (
+        <button className="text-sm font-semibold text-indigo-600 transition hover:text-indigo-700">
+          {deli.name}
+        </button>
+      ),
+    },
+    {
+      header: "Phone",
+      cell: (order) => (
+        <span className="text-sm text-slate-600">{order.phone ?? "-"}</span>
+      ),
+    },
+    {
+      header: "Address",
+      cell: (order) => (
+        <span className="text-sm text-slate-600">{order.address ?? "-"}</span>
+      ),
+    },
+    {
+      header: "Status",
+      cell: (order) => (
+        <span className="text-sm text-slate-600">
+          {order.enabled ? "Enabled" : "Disabled"}
+        </span>
+      ),
+    },
+  ];
+
   const columns: ColumnDef<OrderListRow>[] = [
     {
-      header: "Order ID",
+      header: "Name",
       cell: (order) => (
         <button className="text-sm font-semibold text-indigo-600 transition hover:text-indigo-700">
           {order.shortId}
@@ -479,9 +518,13 @@ export function SettingList({ refreshTrigger }: { refreshTrigger: number }) {
               ))}
             </select>
           </label>
-          <button className="inline-flex h-11 items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50">
-            <Download className="h-4 w-4" />
-            Export CSV
+          <button
+            type="button"
+            onClick={() => {}}
+            className="inline-flex h-11 items-center gap-2 rounded-xl bg-indigo-600 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700"
+          >
+            <Plus className="h-4 w-4" />
+            Add New
           </button>
         </div>
       </div>
@@ -509,28 +552,45 @@ export function SettingList({ refreshTrigger }: { refreshTrigger: number }) {
       {isSupabaseConfigured && !isLoading && !isError && (
         <>
           {/* Desktop Table View */}
-          <div className="hidden md:block">
-            <DataTable
-              data={orders}
-              columns={columns}
-              isFetching={isFetching}
-              hasSelection={true}
-              keyExtractor={(order) => order.id}
-              // Pagination props
-              page={page}
-              pageCount={pageCount}
-              startItem={startItem}
-              endItem={endItem}
-              totalCount={totalCount}
-              onPageChange={setPage}
-              // Empty state
-              emptyStateTitle="No orders found"
-              emptyStateDescription="New orders from Supabase will appear here."
-            />
+          <div className="">
+            {activeTab === "category" ? (
+              <DataTable
+                data={orders}
+                columns={columns}
+                isFetching={isFetching}
+                hasSelection={true}
+                keyExtractor={(order) => order.id}
+                page={page}
+                pageCount={pageCount}
+                startItem={startItem}
+                endItem={endItem}
+                totalCount={totalCount}
+                onPageChange={setPage}
+                emptyStateTitle="No orders found"
+                emptyStateDescription="New orders from Supabase will appear here."
+              />
+            ) : (
+              <DataTable
+                data={deliveries || []}
+                columns={deliColumns}
+                isFetching={isFetching}
+                hasSelection={true}
+                keyExtractor={(deli) => deli.id}
+                page={1}
+                pageCount={1}
+                startItem={1}
+                endItem={deliveries ? deliveries.length : 0}
+                totalCount={deliveries ? deliveries.length : 0}
+                onPageChange={() => {}}
+                emptyStateTitle="No deliveries found"
+                emptyStateDescription="New deliveries from Supabase will appear here."
+              />
+            )}
           </div>
 
           {/* Mobile Card View */}
-          <div className="block md:hidden">
+          {/* <div className="block md:hidden">
+            {activeTab === "category" ? (
             <MobileDataTable
               data={orders}
               isFetching={isFetching}
@@ -545,7 +605,23 @@ export function SettingList({ refreshTrigger }: { refreshTrigger: number }) {
               emptyStateTitle="No orders found"
               emptyStateDescription="New orders from Supabase will appear here."
             />
-          </div>
+            ) : (
+              <MobileDataTable
+                data={deliveries || []}
+                isFetching={isFetching}
+                page={page}
+                pageCount={pageCount}
+                startItem={startItem}
+                endItem={endItem}
+                totalCount={totalCount}
+                onPageChange={setPage}
+                keyExtractor={(deli) => deli.id}
+                renderRow={renderDeliveryCard}
+                emptyStateTitle="No deliveries found"
+              emptyStateDescription="New orders from Supabase will appear here."
+            />
+            )}
+          </div> */}
         </>
       )}
     </div>

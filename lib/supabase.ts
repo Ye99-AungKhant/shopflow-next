@@ -54,9 +54,9 @@ export type OrderItem = {
 
 export type Delivery = {
   id: string;
-  order_id: string;
   name: string;
   phone: string;
   address?: string;
+  enabled: boolean;
   created_at: string;
 };
