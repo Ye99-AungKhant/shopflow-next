@@ -49,7 +49,7 @@ const orderSchema = {
             required: ["name", "quantity", "price"],
           },
         },
-        delivery_provider: {
+        delivery: {
           type: Type.OBJECT,
           description:
             "If a delivery provider (e.g. Royal Express) is mentioned, provide its details.",
