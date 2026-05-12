@@ -49,10 +49,21 @@ const orderSchema = {
             required: ["name", "quantity", "price"],
           },
         },
-        delivery_id: {
-          type: Type.STRING,
+        delivery_provider: {
+          type: Type.OBJECT,
           description:
-            "If the delivery strictly matches one of the available delivery, provide its UUID here.",
+            "If a delivery provider (e.g. Royal Express) is mentioned, provide its details.",
+          properties: {
+            id: {
+              type: Type.STRING,
+              description:
+                "The UUID of the matching delivery provider from the list of available providers, if found.",
+            },
+            name: {
+              type: Type.STRING,
+              description: "The name of the delivery provider.",
+            },
+          },
         },
         status: {
           type: Type.STRING,

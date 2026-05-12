@@ -1,5 +1,5 @@
 "use client";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import {
   ArrowRightLeft,
@@ -24,14 +24,24 @@ import {
   type OrderStatus,
 } from "../lib/orders";
 import { Delivery, isSupabaseConfigured } from "../lib/supabase";
+import { updateDelivery } from "../lib/delivery";
 import { cn, getStatusClass, getStatusLabel } from "../lib/utils";
 import { ColumnDef, DataTable } from "./ui/DataTable";
 import { MobileDataTable } from "./ui/MobileDataTable";
 import { useGetDeliveries } from "@/hooks/delivery";
+import { DeliverySettings } from "./settings/DeliverySettings";
+import { DeliveryModal } from "./settings/DeliveryModal";
 
 type FilterTab = string;
 const pageSizeOptions = [10, 50, 100] as const;
-type ActiveModal = "view" | "edit" | "update-status" | "delete" | null;
+type ActiveModal =
+  | "view"
+  | "edit"
+  | "update-status"
+  | "delete"
+  | "create-delivery"
+  | "edit-delivery"
+  | null;
 
 export type OpenModal = (
   type: ActiveModal,
@@ -53,9 +63,19 @@ export function SettingList({ refreshTrigger }: { refreshTrigger: number }) {
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [activeModal, setActiveModal] = useState<ActiveModal>(null);
   const [selectedOrder, setSelectedOrder] = useState<OrderListRow | null>(null);
-  const [statusModalInitialValue, setStatusModalInitialValue] =
-    useState<OrderStatus | null>(null);
+  const [selectedDelivery, setSelectedDelivery] = useState<Delivery | null>(
+    null,
+  );
   const menuRef = useRef<HTMLDivElement | null>(null);
+  const queryClient = useQueryClient();
+
+  const updateDeliveryStatusMutation = useMutation({
+    mutationFn: ({ id, enabled }: { id: string; enabled: boolean }) =>
+      updateDelivery(id, { enabled }),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["deliveries"] });
+    },
+  });
 
   useEffect(() => {
     setPage(1);
@@ -80,10 +100,19 @@ export function SettingList({ refreshTrigger }: { refreshTrigger: number }) {
     setActiveModal(type);
   };
 
+  const openDeliveryModal = (
+    type: "create-delivery" | "edit-delivery",
+    delivery?: Delivery,
+  ) => {
+    setSelectedDelivery(delivery || null);
+    setActiveModal(type);
+  };
+
   function closeModal() {
     setActiveModal(null);
     setStatusModalInitialValue(null);
     setSelectedOrder(null);
+    setSelectedDelivery(null);
   }
 
   const { data, isLoading, isError, error, isFetching } = useQuery({
@@ -140,10 +169,51 @@ export function SettingList({ refreshTrigger }: { refreshTrigger: number }) {
     },
     {
       header: "Status",
-      cell: (order) => (
-        <span className="text-sm text-slate-600">
-          {order.enabled ? "Enabled" : "Disabled"}
-        </span>
+      cell: (order) => {
+        const handleToggle = async () => {
+          const newState = !order.enabled;
+          updateDeliveryStatusMutation.mutate({
+            id: order.id,
+            enabled: newState,
+          });
+        };
+
+        return (
+          <div className="flex items-center gap-3">
+            <button
+              onClick={handleToggle}
+              className={`
+            relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full 
+            transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2
+            ${order.enabled ? "bg-indigo-600" : "bg-slate-200"}
+          `}
+            >
+              <span
+                className={`
+              pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 
+              transition duration-200 ease-in-out
+              ${order.enabled ? "translate-x-6" : "translate-x-1"}
+            `}
+              />
+            </button>
+            <span className="text-sm font-medium text-slate-700">
+              {order.enabled ? "Enabled" : "Disabled"}
+            </span>
+          </div>
+        );
+      },
+    },
+    {
+      header: "Actions",
+      headerClassName: "text-right",
+      cellClassName: "text-right",
+      cell: (deli) => (
+        <button
+          onClick={() => openDeliveryModal("edit-delivery", deli)}
+          className="inline-flex h-9 items-center gap-2 rounded-lg bg-indigo-600 px-3 py-1 text-xs font-semibold text-white shadow-sm transition hover:bg-indigo-700"
+        >
+          Edit
+        </button>
       ),
     },
   ];
@@ -443,26 +513,12 @@ export function SettingList({ refreshTrigger }: { refreshTrigger: number }) {
 
   return (
     <div className="space-y-6">
-      <ViewOrderModal
-        isOpen={activeModal === "view"}
+      <DeliveryModal
+        isOpen={
+          activeModal === "create-delivery" || activeModal === "edit-delivery"
+        }
         onClose={closeModal}
-        order={selectedOrder}
-      />
-      <UpdateStatusModal
-        isOpen={activeModal === "update-status"}
-        onClose={closeModal}
-        order={selectedOrder}
-        initialStatus={statusModalInitialValue}
-      />
-      <EditOrderModal
-        isOpen={activeModal === "edit"}
-        onClose={closeModal}
-        order={selectedOrder}
-      />
-      <DeleteOrderModal
-        isOpen={activeModal === "delete"}
-        onClose={closeModal}
-        order={selectedOrder}
+        delivery={selectedDelivery}
       />
 
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
@@ -520,7 +576,7 @@ export function SettingList({ refreshTrigger }: { refreshTrigger: number }) {
           </label>
           <button
             type="button"
-            onClick={() => {}}
+            onClick={() => openDeliveryModal("create-delivery")}
             className="inline-flex h-11 items-center gap-2 rounded-xl bg-indigo-600 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700"
           >
             <Plus className="h-4 w-4" />
