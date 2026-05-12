@@ -1,11 +1,19 @@
-import { format } from 'date-fns';
-import { isSupabaseConfigured, supabase, type Customer, type Order, type OrderItem } from './supabase';
+import { format } from "date-fns";
+import {
+  Delivery,
+  isSupabaseConfigured,
+  supabase,
+  type Customer,
+  type Order,
+  type OrderItem,
+} from "./supabase";
 
-export type OrderStatus = 'pending' | 'in_delivery' | 'completed' | 'canceled';
+export type OrderStatus = "pending" | "in_delivery" | "completed" | "canceled";
 
 type OrderWithRelations = Order & {
   customer: Customer | null;
   order_items: OrderItem[];
+  delivery?: Delivery | null;
 };
 
 export type OrderListRow = {
@@ -18,13 +26,14 @@ export type OrderListRow = {
   status: OrderStatus;
   items: string;
   total: string;
+  delivery?: Delivery;
 };
 
 export type FetchOrdersParams = {
   page: number;
   pageSize: number;
   search?: string;
-  status?: 'all' | OrderStatus;
+  status?: "all" | OrderStatus;
 };
 
 export type OrdersPage = {
@@ -76,11 +85,11 @@ export type UpdateOrderInput = {
 };
 
 const avatarClasses = [
-  'bg-rose-100 text-rose-600',
-  'bg-sky-100 text-sky-600',
-  'bg-violet-100 text-violet-600',
-  'bg-emerald-100 text-emerald-600',
-  'bg-amber-100 text-amber-700',
+  "bg-rose-100 text-rose-600",
+  "bg-sky-100 text-sky-600",
+  "bg-violet-100 text-violet-600",
+  "bg-emerald-100 text-emerald-600",
+  "bg-amber-100 text-amber-700",
 ];
 
 function formatCurrency(value: number) {
@@ -89,61 +98,61 @@ function formatCurrency(value: number) {
 
 function getInitials(name: string) {
   return name
-    .split(' ')
+    .split(" ")
     .filter(Boolean)
     .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase() ?? '')
-    .join('');
+    .map((part) => part[0]?.toUpperCase() ?? "")
+    .join("");
 }
 
-function mapOrderStatus(status: Order['status']): OrderStatus {
+function mapOrderStatus(status: Order["status"]): OrderStatus {
   switch (status) {
-    case 'pending':
-      return 'pending';
-    case 'canceled':
-      return 'canceled';
-    case 'completed':
-      return 'completed';
-    case 'delivery':
+    case "pending":
+      return "pending";
+    case "canceled":
+      return "canceled";
+    case "completed":
+      return "completed";
+    case "delivery":
     default:
-      return 'in_delivery';
+      return "in_delivery";
   }
 }
 
-function mapDbStatus(status: OrderStatus): Order['status'] {
+function mapDbStatus(status: OrderStatus): Order["status"] {
   switch (status) {
-    case 'in_delivery':
-      return 'delivery';
-    case 'pending':
-      return 'pending';
-    case 'canceled':
-      return 'canceled';
-    case 'completed':
+    case "in_delivery":
+      return "delivery";
+    case "pending":
+      return "pending";
+    case "canceled":
+      return "canceled";
+    case "completed":
     default:
-      return 'completed';
+      return "completed";
   }
 }
 
 function splitName(name: string) {
-  const [firstName = '', ...rest] = name.trim().split(' ').filter(Boolean);
+  const [firstName = "", ...rest] = name.trim().split(" ").filter(Boolean);
   return {
     firstName,
-    lastName: rest.join(' '),
+    lastName: rest.join(" "),
   };
 }
 
-function calculateTotal(items: Pick<OrderDetailItem, 'quantity' | 'price'>[]) {
+function calculateTotal(items: Pick<OrderDetailItem, "quantity" | "price">[]) {
   return items.reduce(
     (sum, item) => sum + Number(item.price ?? 0) * Number(item.quantity ?? 0),
-    0
+    0,
   );
 }
 
 export async function fetchOrders({
   page,
   pageSize,
-  search = '',
-  status = 'all',
+  search = "",
+  status = "all",
 }: FetchOrdersParams): Promise<OrdersPage> {
   if (!isSupabaseConfigured) {
     return {
@@ -159,33 +168,35 @@ export async function fetchOrders({
   const to = from + pageSize - 1;
 
   let query = supabase
-    .from('orders')
+    .from("orders")
     .select(
       `
         id,
         customer_id,
+        delivery_id,
         status,
         total_price,
         created_at,
         customer:customers(id, name, phone, address, created_at),
+        delivery:delivery(id, name, phone, address, created_at, enabled),
         order_items(id, order_id, inventory_id, name, quantity, price, source, created_at)
       `,
-      { count: 'exact' }
+      { count: "exact" },
     )
-    .order('created_at', { ascending: false });
+    .order("created_at", { ascending: false });
 
-  if (status === 'completed') {
-    query = query.eq('status', 'completed');
-  } else if (status === 'in_delivery') {
-    query = query.eq('status', 'delivery');
-  } else if (status === 'pending' || status === 'canceled') {
-    query = query.eq('status', status);
+  if (status === "completed") {
+    query = query.eq("status", "completed");
+  } else if (status === "in_delivery") {
+    query = query.eq("status", "delivery");
+  } else if (status === "pending" || status === "canceled") {
+    query = query.eq("status", status);
   }
 
   const normalizedSearch = search.trim();
   if (normalizedSearch) {
     query = query.or(
-      `id.ilike.%${normalizedSearch}%,customers.name.ilike.%${normalizedSearch}%`
+      `id.ilike.%${normalizedSearch}%,customers.name.ilike.%${normalizedSearch}%`,
     );
   }
 
@@ -196,18 +207,23 @@ export async function fetchOrders({
   }
 
   const rows = ((data ?? []) as OrderWithRelations[]).map((order, index) => {
-    const customerName = order.customer?.name?.trim() || 'Guest Customer';
-    const itemCount = order.order_items?.reduce((sum, item) => sum + Number(item.quantity ?? 0), 0) ?? 0;
+    const customerName = order.customer?.name?.trim() || "Guest Customer";
+    const itemCount =
+      order.order_items?.reduce(
+        (sum, item) => sum + Number(item.quantity ?? 0),
+        0,
+      ) ?? 0;
 
     return {
       id: order.id,
       shortId: `#${order.id.slice(0, 4).toUpperCase()}`,
-      date: format(new Date(order.created_at), 'MMM dd, yyyy'),
+      date: format(new Date(order.created_at), "MMM dd, yyyy"),
       customer: customerName,
-      avatar: getInitials(customerName) || 'GC',
+      avatar: getInitials(customerName) || "GC",
       avatarClass: avatarClasses[index % avatarClasses.length],
       status: mapOrderStatus(order.status),
-      items: `${itemCount} ${itemCount === 1 ? 'item' : 'items'}`,
+      items: `${itemCount} ${itemCount === 1 ? "item" : "items"}`,
+      delivery: order?.delivery || null,
       total: formatCurrency(Number(order.total_price ?? 0)),
     };
   });
@@ -223,25 +239,29 @@ export async function fetchOrders({
   };
 }
 
-export async function fetchOrderDetails(orderId: string): Promise<OrderDetails> {
+export async function fetchOrderDetails(
+  orderId: string,
+): Promise<OrderDetails> {
   if (!isSupabaseConfigured) {
-    throw new Error('Supabase is not configured.');
+    throw new Error("Supabase is not configured.");
   }
 
   const { data, error } = await supabase
-    .from('orders')
+    .from("orders")
     .select(
       `
         id,
         customer_id,
+        delivery_id,
         status,
         total_price,
         created_at,
         customer:customers(id, name, phone, address, created_at),
+        delivery:delivery(id, name, phone, address, created_at, enabled),
         order_items(id, order_id, inventory_id, name, quantity, price, source, created_at)
-      `
+      `,
     )
-    .eq('id', orderId)
+    .eq("id", orderId)
     .single();
 
   if (error) {
@@ -249,22 +269,22 @@ export async function fetchOrderDetails(orderId: string): Promise<OrderDetails> 
   }
 
   const order = data as OrderWithRelations;
-  const customerName = order.customer?.name?.trim() || 'Guest Customer';
+  const customerName = order.customer?.name?.trim() || "Guest Customer";
   const { firstName, lastName } = splitName(customerName);
 
   return {
     id: order.id,
     shortId: `#${order.id.slice(0, 4).toUpperCase()}`,
-    createdAt: format(new Date(order.created_at), 'MMM dd, yyyy'),
+    createdAt: format(new Date(order.created_at), "MMM dd, yyyy"),
     status: mapOrderStatus(order.status),
     totalPrice: Number(order.total_price ?? 0),
     customerId: order.customer?.id ?? order.customer_id,
     customerName,
     firstName,
     lastName,
-    email: '',
-    phone: order.customer?.phone ?? '',
-    address: order.customer?.address ?? '',
+    email: "",
+    phone: order.customer?.phone ?? "",
+    address: order.customer?.address ?? "",
     items: (order.order_items ?? []).map((item) => ({
       id: item.id,
       inventoryId: item.inventory_id ?? null,
@@ -281,13 +301,13 @@ export async function updateOrderStatus({
   status,
 }: UpdateOrderStatusInput): Promise<void> {
   if (!isSupabaseConfigured) {
-    throw new Error('Supabase is not configured.');
+    throw new Error("Supabase is not configured.");
   }
 
   const { error } = await supabase
-    .from('orders')
+    .from("orders")
     .update({ status: mapDbStatus(status) })
-    .eq('id', orderId);
+    .eq("id", orderId);
 
   if (error) {
     throw new Error(error.message);
@@ -296,10 +316,10 @@ export async function updateOrderStatus({
 
 export async function deleteOrder(orderId: string): Promise<void> {
   if (!isSupabaseConfigured) {
-    throw new Error('Supabase is not configured.');
+    throw new Error("Supabase is not configured.");
   }
 
-  const { error } = await supabase.from('orders').delete().eq('id', orderId);
+  const { error } = await supabase.from("orders").delete().eq("id", orderId);
 
   if (error) {
     throw new Error(error.message);
@@ -308,41 +328,41 @@ export async function deleteOrder(orderId: string): Promise<void> {
 
 export async function updateOrder(input: UpdateOrderInput): Promise<void> {
   if (!isSupabaseConfigured) {
-    throw new Error('Supabase is not configured.');
+    throw new Error("Supabase is not configured.");
   }
 
   const customerName = [input.firstName.trim(), input.lastName.trim()]
     .filter(Boolean)
-    .join(' ')
+    .join(" ")
     .trim();
 
   const normalizedItems = input.items.map((item) => ({
     id: item.id,
     order_id: input.orderId,
     inventory_id: item.inventoryId,
-    name: item.name.trim() || 'Untitled Item',
+    name: item.name.trim() || "Untitled Item",
     quantity: Math.max(1, Number(item.quantity ?? 1)),
     price: Number(item.price ?? 0),
-    source: item.source ?? 'manual',
+    source: item.source ?? "manual",
   }));
 
   const { error: customerError } = await supabase
-    .from('customers')
+    .from("customers")
     .update({
-      name: customerName || 'Guest Customer',
+      name: customerName || "Guest Customer",
       phone: input.phone.trim() || null,
       address: input.address.trim() || null,
     })
-    .eq('id', input.customerId);
+    .eq("id", input.customerId);
 
   if (customerError) {
     throw new Error(customerError.message);
   }
 
   const { error: deleteItemsError } = await supabase
-    .from('order_items')
+    .from("order_items")
     .delete()
-    .eq('order_id', input.orderId);
+    .eq("order_id", input.orderId);
 
   if (deleteItemsError) {
     throw new Error(deleteItemsError.message);
@@ -350,7 +370,7 @@ export async function updateOrder(input: UpdateOrderInput): Promise<void> {
 
   if (normalizedItems.length > 0) {
     const { error: insertItemsError } = await supabase
-      .from('order_items')
+      .from("order_items")
       .insert(normalizedItems);
 
     if (insertItemsError) {
@@ -359,9 +379,9 @@ export async function updateOrder(input: UpdateOrderInput): Promise<void> {
   }
 
   const { error: orderError } = await supabase
-    .from('orders')
+    .from("orders")
     .update({ total_price: calculateTotal(normalizedItems) })
-    .eq('id', input.orderId);
+    .eq("id", input.orderId);
 
   if (orderError) {
     throw new Error(orderError.message);

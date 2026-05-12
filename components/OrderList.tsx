@@ -164,6 +164,15 @@ export function OrderList({ refreshTrigger }: { refreshTrigger: number }) {
       cellClassName: "text-right text-sm font-semibold text-slate-900",
     },
     {
+      header: "Delivery",
+      accessorKey: "delivery",
+      cell: (order) => (
+        <span className="text-right text-sm font-semibold text-slate-900">
+          {order?.delivery?.name}
+        </span>
+      ),
+    },
+    {
       header: "Actions",
       headerClassName: "text-right",
       cellClassName: "text-right",
