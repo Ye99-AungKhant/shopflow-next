@@ -158,12 +158,20 @@ export function AiOrderEntry({ onOrderAdded }: { onOrderAdded: () => void }) {
         // Attempt to insert into Supabase
         const orderInfo = result.order_data;
         let customerId;
+        let deliveryId;
 
         // 1. Upsert Customer
         const { data: existingCustomer, error: cSearchError } = await supabase
           .from("customers")
           .select("id")
           .eq("name", orderInfo.customer.name)
+          .limit(1)
+          .maybeSingle();
+
+        const { data: existingDelivery, error: dSearchError } = await supabase
+          .from("delivery")
+          .select("id")
+          .eq("name", orderInfo.delivery.name)
           .limit(1)
           .maybeSingle();
 
@@ -189,6 +197,9 @@ export function AiOrderEntry({ onOrderAdded }: { onOrderAdded: () => void }) {
             throw new Error(`Customer insert error: ${cInsError.message}`);
           customerId = newCustomer.id;
         }
+        if (existingDelivery) {
+          deliveryId = existingDelivery.id;
+        }
 
         // 2. Insert Order
         let totalPrice = 0;
@@ -210,6 +221,7 @@ export function AiOrderEntry({ onOrderAdded }: { onOrderAdded: () => void }) {
           .from("orders")
           .insert({
             customer_id: customerId,
+            delivery_id: deliveryId,
             status,
             total_price: totalPrice,
           })
