@@ -40,6 +40,13 @@ const navItems: NavItem[] = [
     subheader: "Manage, track, and update customer orders.",
   },
   {
+    id: "ai",
+    label: "AI Order",
+    icon: Sparkles,
+    header: "AI Order Entry",
+    subheader: "Use AI to enter orders.",
+  },
+  {
     id: "inventory",
     label: "Inventory",
     icon: PackageSearch,

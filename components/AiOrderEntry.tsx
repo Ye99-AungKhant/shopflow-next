@@ -325,7 +325,7 @@ export function AiOrderEntry({ onOrderAdded }: { onOrderAdded: () => void }) {
         <div ref={messagesEndRef} />
       </div>
 
-      <div className="p-4 pb-24 md:pb-4 bg-white border-t border-slate-100 shrink-0">
+      <div className="p-4 pb-24 md:pb-4 bg-white border-t border-slate-100 shrink-0 absolute md:relative bottom-0 left-0 right-0">
         <div className="relative flex flex-col w-full">
           <div className="relative flex items-center w-full">
             <input
