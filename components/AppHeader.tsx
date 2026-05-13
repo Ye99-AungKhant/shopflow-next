@@ -1,7 +1,8 @@
 "use client";
 
-import { Search, Plus } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Search, Plus, LogOut, User } from "lucide-react";
+import { logout } from "@/app/login/actions";
+import UserMenu from "./UserMenu";
 
 type HeaderProps = {
   activeTab: {
@@ -33,17 +34,23 @@ export function AppHeader({ activeTab, onAiSelect }: HeaderProps) {
           </label>
 
           <div className="flex items-center gap-3">
-            {/* <button className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white text-slate-600 shadow-sm ring-1 ring-slate-200/70 transition hover:text-slate-900">
-              <Search className="h-5 w-5" />
-            </button>
-            <button
+            {/* <button
+              type="button"
               onClick={onAiSelect}
               className="inline-flex h-11 items-center gap-2 rounded-2xl bg-indigo-600 px-4 text-sm font-semibold text-white shadow-sm shadow-indigo-200 transition hover:bg-indigo-700"
             >
               <Plus className="h-4 w-4" />
               Quick Add
             </button> */}
-            <div className="flex items-center gap-3 rounded-2xl bg-white md:px-3 md:py-1 sm:p-0 shadow-sm ring-1 ring-slate-200/70">
+            {/* <form action={logout}>
+              <button
+                type="submit"
+                className="inline-flex h-11 items-center justify-center rounded-2xl bg-slate-900 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800"
+              >
+                Logout
+              </button>
+            </form> */}
+            {/* <div className="flex items-center gap-3 rounded-2xl bg-white md:px-3 md:py-1 sm:p-0 shadow-sm ring-1 ring-slate-200/70">
               <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-violet-500 text-sm font-semibold text-white">
                 SF
               </div>
@@ -53,7 +60,12 @@ export function AppHeader({ activeTab, onAiSelect }: HeaderProps) {
                 </p>
                 <p className="text-xs text-slate-500">Admin</p>
               </div>
-            </div>
+              <LogOut
+                onClick={logout}
+                className="text-red-500 hover:text-red-700 cursor-pointer transition-colors"
+              />
+            </div> */}
+            <UserMenu logout={logout} />
           </div>
         </div>
       </div>

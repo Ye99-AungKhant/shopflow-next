@@ -89,7 +89,7 @@ export function Dashboard({ refreshTrigger }: { refreshTrigger: number }) {
 
   return (
     <div className="space-y-6">
-      <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <section className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
         {kpiCards.map((card) => {
           const Icon = card.icon;
           const isInventory = card.label === "Inventory";
@@ -105,48 +105,44 @@ export function Dashboard({ refreshTrigger }: { refreshTrigger: number }) {
           return (
             <div
               key={card.label}
-              className="rounded-3xl bg-white p-5 shadow-[0_20px_60px_-35px_rgba(15,23,42,0.25)]"
+              className="rounded-3xl bg-white p-4 sm:p-5 shadow-[0_20px_60px_-35px_rgba(15,23,42,0.25)]"
             >
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">
+                  <p className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">
                     {card.label}
                   </p>
                 </div>
-                <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600">
-                  <Icon className="h-4 w-4" />
+                <div className="flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600 shrink-0">
+                  <Icon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                 </div>
               </div>
 
-              <div className="mt-6">
-                <p className="text-4xl font-bold tracking-tight text-slate-900">
+              <div className="mt-4 sm:mt-6">
+                <p className="text-2xl sm:text-4xl font-bold tracking-tight text-slate-900 truncate">
                   {card.value}
-                  <span className="ml-2 text-lg font-medium text-slate-400">
+                  <span className="ml-1 sm:ml-2 text-sm sm:text-lg font-medium text-slate-400">
                     {isInventory ? "Products" : ""}
                   </span>
                 </p>
               </div>
 
-              {/* <div
-                className={`mt-4 flex items-center gap-2 text-sm ${trendColor}`}
-              >
-                <TrendIcon className="h-4 w-4" />
-                <span className="font-medium">{card.trend}</span>
-              </div> */}
-              <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
+              <div className="mt-4 flex flex-wrap items-center gap-x-2 sm:gap-x-4 gap-y-1 text-xs sm:text-sm">
                 {isInventory ? (
                   <>
-                    <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-xs font-bold text-amber-700 border border-amber-100">
+                    <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-[10px] sm:text-xs font-bold text-amber-700 border border-amber-100">
                       {card.lowStock} Low Stock
                     </span>
 
-                    <span className="inline-flex items-center gap-1 rounded-full bg-rose-50 px-2 py-0.5 text-xs font-bold text-rose-700 border border-rose-100">
+                    <span className="inline-flex items-center gap-1 rounded-full bg-rose-50 px-2 py-0.5 text-[10px] sm:text-xs font-bold text-rose-700 border border-rose-100">
                       {card.outOfStock} Out of Stock
                     </span>
                   </>
                 ) : (
-                  <div className={`flex items-center gap-2 ${trendColor}`}>
-                    <TrendIcon className="h-4 w-4" />
+                  <div
+                    className={`flex items-center gap-1 sm:gap-2 ${trendColor}`}
+                  >
+                    <TrendIcon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                     <span className="font-medium">{card.trend}</span>
                   </div>
                 )}
