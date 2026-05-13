@@ -37,6 +37,7 @@ export type DashboardProduct = {
   name: string;
   sold: string;
   revenue: string;
+  photo_url?: string;
 };
 
 export type DashboardTrend = {
@@ -167,7 +168,9 @@ export async function fetchDashboardData(): Promise<DashboardData> {
     supabase.from("customers").select("id, name, phone, address, created_at"),
     supabase
       .from("inventory")
-      .select("id, name, sku, stock_quantity, cost, price, created_at"),
+      .select(
+        "id, name, sku, stock_quantity, cost, price, photo_url, created_at",
+      ),
   ]);
 
   if (ordersResult.error) {
@@ -280,19 +283,27 @@ export async function fetchDashboardData(): Promise<DashboardData> {
   const inventoryNameById = new Map(
     inventory.map((item) => [item.id, item.name]),
   );
-  const productStats = new Map<string, { units: number; revenue: number }>();
+  const productStats = new Map<
+    string,
+    { units: number; revenue: number; photo_url: string }
+  >();
 
   for (const order of orders) {
     for (const item of order.order_items ?? []) {
       const productName = item.inventory_id
         ? (inventoryNameById.get(item.inventory_id) ?? item.name)
         : item.name;
+      const photo_url = inventory.find(
+        (inv) => inv.id === item.inventory_id,
+      )?.photo_url;
       const existing = productStats.get(productName) ?? {
         units: 0,
         revenue: 0,
+        photo_url: "",
       };
       existing.units += Number(item.quantity ?? 0);
       existing.revenue += Number(item.price ?? 0) * Number(item.quantity ?? 0);
+      existing.photo_url = photo_url || "";
       productStats.set(productName, existing);
     }
   }
@@ -304,6 +315,7 @@ export async function fetchDashboardData(): Promise<DashboardData> {
       name,
       sold: `${stats.units} units sold`,
       revenue: formatCurrency(stats.revenue),
+      photo_url: stats.photo_url,
     }));
 
   // Calculate totalCost for completed orders

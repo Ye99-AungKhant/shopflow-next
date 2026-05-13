@@ -51,7 +51,7 @@ const tabs: { id: FilterTab; label: string }[] = [
 ];
 
 export function OrderList({ refreshTrigger }: { refreshTrigger: number }) {
-  const [activeTab, setActiveTab] = useState<FilterTab>("all");
+  const [activeTab, setActiveTab] = useState<string>("all");
   const [searchValue, setSearchValue] = useState("");
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] =
@@ -454,25 +454,18 @@ export function OrderList({ refreshTrigger }: { refreshTrigger: number }) {
       />
 
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-        <div className="flex flex-wrap items-center gap-2">
-          {tabs.map((tab) => {
-            const isActive = activeTab === tab.id;
-
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={cn(
-                  "rounded-full px-4 py-2 text-sm font-medium transition",
-                  isActive
-                    ? "bg-indigo-50 text-indigo-700 shadow-sm"
-                    : "text-slate-500 hover:bg-white hover:text-slate-900",
-                )}
-              >
+        <div className="flex h-11 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-600 shadow-sm">
+          <select
+            value={activeTab}
+            onChange={(e) => setActiveTab(e.target.value)}
+            className="bg-transparent font-medium text-slate-900 outline-none"
+          >
+            {tabs.map((tab) => (
+              <option key={tab.id} value={tab.id}>
                 {tab.label}
-              </button>
-            );
-          })}
+              </option>
+            ))}
+          </select>
         </div>
 
         <div className="flex flex-wrap items-center gap-2">

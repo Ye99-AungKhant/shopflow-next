@@ -66,6 +66,7 @@ export function AppSidebar({
                   isActive
                     ? "bg-indigo-50 text-indigo-700 shadow-sm"
                     : "text-slate-500 hover:bg-slate-100 hover:text-slate-900",
+                  item.id === "ai" && "md:hidden",
                 )}
               >
                 <Icon className="h-4 w-4" />
@@ -114,7 +115,7 @@ export function AppSidebar({
               key={item.id}
               onClick={() => onSelect(item)}
               className={cn(
-                "flex min-w-[72px] flex-col items-center gap-1 rounded-2xl px-3 py-2 text-[11px] font-medium transition",
+                "flex flex-col items-center gap-1 rounded-2xl px-3 py-2 text-[11px] font-medium transition",
                 isActive ? "bg-indigo-50 text-indigo-700" : "text-slate-500",
               )}
             >

@@ -33,7 +33,7 @@ export type FetchOrdersParams = {
   page: number;
   pageSize: number;
   search?: string;
-  status?: "all" | OrderStatus;
+  status?: string | OrderStatus;
 };
 
 export type OrdersPage = {

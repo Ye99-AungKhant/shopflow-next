@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Download,
   MoreHorizontal,
+  Package,
   PackagePlus,
   Pencil,
   Plus,
@@ -86,8 +87,8 @@ function renderStockBadge(item: InventoryRow) {
 }
 
 export function InventoryList() {
-  const [activeTab, setActiveTab] = useState<Tab>("All Items");
-  const [search, setSearch] = useState("");
+  const [activeTab, setActiveTab] = useState<string>("All Items");
+  const [search, setSearch] = useState<string>("");
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] =
     useState<(typeof pageSizeOptions)[number]>(10);
@@ -309,16 +310,20 @@ export function InventoryList() {
       header: "Product",
       cell: (row) => (
         <div className="flex items-center gap-3">
-          {/* <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-100 text-slate-400">
-            <span className="text-sm font-semibold">{row.}</span>
-          </div> */}
-          <Image
-            src={row.photo_url ?? "/placeholder.png"}
-            alt={row.name}
-            width={40}
-            height={40}
-            className="rounded-xl object-cover"
-          />
+          {row.photo_url ? (
+            <Image
+              src={row.photo_url ?? "/placeholder.png"}
+              alt={row.name}
+              width={40}
+              height={40}
+              className="rounded-xl object-cover"
+            />
+          ) : (
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-200 text-slate-500">
+              <Package className="h-5 w-5" />
+            </div>
+          )}
+
           <div>
             <p className="text-sm font-semibold text-slate-900">{row.name}</p>
             <p className="text-xs text-slate-400">{row.category}</p>
@@ -646,21 +651,18 @@ export function InventoryList() {
       />
 
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-        <div className="flex flex-wrap items-center gap-2">
-          {tabs.map((tab) => (
-            <button
-              key={tab}
-              type="button"
-              onClick={() => setActiveTab(tab)}
-              className={`rounded-full px-4 py-2 text-sm font-medium transition ${
-                activeTab === tab
-                  ? "bg-indigo-50 text-indigo-700 shadow-sm"
-                  : "text-slate-500 hover:bg-white hover:text-slate-900"
-              }`}
-            >
-              {tab}
-            </button>
-          ))}
+        <div className="flex h-11 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-600 shadow-sm">
+          <select
+            value={activeTab}
+            onChange={(e) => setActiveTab(e.target.value)}
+            className="bg-transparent font-medium text-slate-900 outline-none"
+          >
+            {tabs.map((tab) => (
+              <option key={tab} value={tab}>
+                {tab}
+              </option>
+            ))}
+          </select>
         </div>
 
         <div className="flex flex-wrap items-center gap-2">

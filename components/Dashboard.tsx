@@ -21,6 +21,7 @@ import {
 import { fetchDashboardData } from "../lib/dashboard";
 import { isSupabaseConfigured } from "../lib/supabase";
 import { span } from "motion/react-client";
+import Image from "next/image";
 
 function formatCurrency(value: number) {
   return `$${value.toFixed(2)}`;
@@ -331,9 +332,20 @@ export function Dashboard({ refreshTrigger }: { refreshTrigger: number }) {
                   className="flex flex-col gap-4 rounded-2xl bg-slate-50/80 px-4 py-4 sm:flex-row sm:items-center sm:justify-between"
                 >
                   <div className="flex items-center gap-4">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-200 text-slate-500">
-                      <Package className="h-5 w-5" />
-                    </div>
+                    {product.photo_url ? (
+                      <Image
+                        src={product.photo_url}
+                        alt={product.name}
+                        width={50}
+                        height={50}
+                        className="rounded-xl object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-200 text-slate-500">
+                        <Package className="h-5 w-5" />
+                      </div>
+                    )}
+
                     <div>
                       <p className="font-semibold text-slate-900">
                         {product.name}
