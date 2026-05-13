@@ -65,7 +65,7 @@ export function DataTable<T>({
         </div>
       )}
 
-      <div className="overflow-x-auto">
+      <div className="overflow-visible">
         <table className="min-w-full divide-y divide-slate-200">
           <thead className="bg-white">
             <tr>

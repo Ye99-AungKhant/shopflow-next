@@ -67,6 +67,7 @@ export type OrderDetails = {
   phone: string;
   address: string;
   items: OrderDetailItem[];
+  delivery?: Delivery;
 };
 
 export type UpdateOrderStatusInput = {
@@ -177,7 +178,7 @@ export async function fetchOrders({
         status,
         total_price,
         created_at,
-        customer:customers(id, name, phone, address, created_at),
+        customer:customers!inner(id, name, phone, address, created_at),
         delivery:delivery(id, name, phone, address, created_at, enabled),
         order_items(id, order_id, inventory_id, name, quantity, price, source, created_at)
       `,
@@ -196,7 +197,8 @@ export async function fetchOrders({
   const normalizedSearch = search.trim();
   if (normalizedSearch) {
     query = query.or(
-      `id.ilike.%${normalizedSearch}%,customers.name.ilike.%${normalizedSearch}%`,
+      `name.ilike.%${normalizedSearch}%,phone.ilike.%${normalizedSearch}%`,
+      { foreignTable: "customers" },
     );
   }
 

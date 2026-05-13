@@ -1,9 +1,13 @@
 "use client";
-import { useQuery } from '@tanstack/react-query';
-import { type ReactNode } from 'react';
-import { CreditCard, MapPin, User } from 'lucide-react';
-import { Modal } from '../ui/Modal';
-import { fetchOrderDetails, type OrderListRow, type OrderStatus } from '../../lib/orders';
+import { useQuery } from "@tanstack/react-query";
+import { type ReactNode } from "react";
+import { CreditCard, MapPin, User } from "lucide-react";
+import { Modal } from "../ui/Modal";
+import {
+  fetchOrderDetails,
+  type OrderListRow,
+  type OrderStatus,
+} from "../../lib/orders";
 
 type ViewOrderModalProps = {
   isOpen: boolean;
@@ -17,29 +21,29 @@ function formatCurrency(value: number) {
 
 function getStatusClass(status: OrderStatus) {
   switch (status) {
-    case 'completed':
-      return 'bg-emerald-100 text-emerald-700';
-    case 'in_delivery':
-      return 'bg-amber-100 text-amber-700';
-    case 'canceled':
-      return 'bg-red-100 text-red-700';
-    case 'pending':
+    case "completed":
+      return "bg-emerald-100 text-emerald-700";
+    case "in_delivery":
+      return "bg-amber-100 text-amber-700";
+    case "canceled":
+      return "bg-red-100 text-red-700";
+    case "pending":
     default:
-      return 'bg-slate-100 text-slate-700';
+      return "bg-slate-100 text-slate-700";
   }
 }
 
 function getStatusLabel(status: OrderStatus) {
   switch (status) {
-    case 'in_delivery':
-      return 'In Delivery';
-    case 'completed':
-      return 'Completed';
-    case 'canceled':
-      return 'Canceled';
-    case 'pending':
+    case "in_delivery":
+      return "In Delivery";
+    case "completed":
+      return "Completed";
+    case "canceled":
+      return "Canceled";
+    case "pending":
     default:
-      return 'Pending';
+      return "Pending";
   }
 }
 
@@ -61,7 +65,9 @@ function InfoBlock({
       <div className="space-y-3">
         {rows.map((row) => (
           <div key={row.label}>
-            <p className="text-xs font-medium uppercase tracking-wide text-slate-500">{row.label}</p>
+            <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
+              {row.label}
+            </p>
             <p className="mt-1 text-sm text-slate-900">{row.value}</p>
           </div>
         ))}
@@ -70,9 +76,13 @@ function InfoBlock({
   );
 }
 
-export function ViewOrderModal({ isOpen, onClose, order }: ViewOrderModalProps) {
+export function ViewOrderModal({
+  isOpen,
+  onClose,
+  order,
+}: ViewOrderModalProps) {
   const { data, isLoading, isError, error } = useQuery({
-    queryKey: ['order-details', order?.id],
+    queryKey: ["order-details", order?.id],
     queryFn: () => fetchOrderDetails(order!.id),
     enabled: isOpen && Boolean(order?.id),
   });
@@ -106,11 +116,15 @@ export function ViewOrderModal({ isOpen, onClose, order }: ViewOrderModalProps) 
               </div>
               <div className="divide-y divide-slate-100">
                 {isLoading && (
-                  <div className="px-4 py-8 text-sm text-slate-500">Loading order items...</div>
+                  <div className="px-4 py-8 text-sm text-slate-500">
+                    Loading order items...
+                  </div>
                 )}
                 {isError && (
                   <div className="px-4 py-8 text-sm text-rose-500">
-                    {error instanceof Error ? error.message : 'Failed to load order details.'}
+                    {error instanceof Error
+                      ? error.message
+                      : "Failed to load order details."}
                   </div>
                 )}
                 {data?.items.map((item) => (
@@ -121,11 +135,17 @@ export function ViewOrderModal({ isOpen, onClose, order }: ViewOrderModalProps) 
                     <div className="flex items-center gap-3">
                       <div className="h-12 w-12 rounded-lg bg-slate-200" />
                       <div>
-                        <p className="text-sm font-medium text-slate-900">{item.name}</p>
-                        <p className="text-xs text-slate-500">{item.source || 'Manual item'}</p>
+                        <p className="text-sm font-medium text-slate-900">
+                          {item.name}
+                        </p>
+                        <p className="text-xs text-slate-500">
+                          {item.source || "Manual item"}
+                        </p>
                       </div>
                     </div>
-                    <span className="text-sm text-slate-600">{item.quantity}</span>
+                    <span className="text-sm text-slate-600">
+                      {item.quantity}
+                    </span>
                     <span className="text-right text-sm font-medium text-slate-900">
                       {formatCurrency(item.price * item.quantity)}
                     </span>
@@ -146,7 +166,9 @@ export function ViewOrderModal({ isOpen, onClose, order }: ViewOrderModalProps) 
                 <span className="font-medium text-slate-900">$0.00</span>
               </div>
               <div className="mt-4 flex items-center justify-between border-t border-slate-200 pt-4">
-                <span className="text-sm font-semibold text-slate-900">Total</span>
+                <span className="text-sm font-semibold text-slate-900">
+                  Total
+                </span>
                 <span className="text-lg font-bold text-slate-900">
                   {formatCurrency(data?.totalPrice ?? 0)}
                 </span>
@@ -159,27 +181,33 @@ export function ViewOrderModal({ isOpen, onClose, order }: ViewOrderModalProps) 
               icon={<User className="h-4 w-4" />}
               title="Customer Information"
               rows={[
-                { label: 'Name', value: data?.customerName ?? order.customer },
-                { label: 'Order ID', value: order.shortId },
-                { label: 'Contact', value: data?.phone || 'Not provided' },
+                { label: "Name", value: data?.customerName ?? order.customer },
+                { label: "Order ID", value: order.shortId },
+                { label: "Contact", value: data?.phone || "Not provided" },
               ]}
             />
             <InfoBlock
               icon={<MapPin className="h-4 w-4" />}
               title="Shipping Address"
               rows={[
-                { label: 'Address', value: data?.address || 'Not provided' },
-                { label: 'Order Date', value: data?.createdAt ?? order.date },
-                { label: 'Delivery Window', value: data?.status ? getStatusLabel(data.status) : getStatusLabel(order.status) },
+                { label: "Address", value: data?.address || "Not provided" },
+                { label: "Order Date", value: data?.createdAt ?? order.date },
+                {
+                  label: "Delivery Window",
+                  value: `${data?.status ? getStatusLabel(data.status) : getStatusLabel(order.status)}, ${order?.delivery?.name || ""}`,
+                },
               ]}
             />
             <InfoBlock
               icon={<CreditCard className="h-4 w-4" />}
               title="Payment Info"
               rows={[
-                { label: 'Method', value: 'Not available in schema' },
-                { label: 'Payment Status', value: 'Captured in order total' },
-                { label: 'Billing Email', value: data?.email || 'Not provided' },
+                { label: "Method", value: "Not available in schema" },
+                { label: "Payment Status", value: "Captured in order total" },
+                {
+                  label: "Billing Email",
+                  value: data?.email || "Not provided",
+                },
               ]}
             />
           </div>

@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Download,
@@ -15,6 +15,7 @@ import { AdjustStockModal } from "./AdjustStockModal";
 import { DeleteItemModal } from "./DeleteItemModal";
 import { EditItemModal } from "./EditItemModal";
 import { InventoryItem, isSupabaseConfigured, supabase } from "../lib/supabase";
+import { cn, useAutoFlipDropdown } from "../lib/utils";
 import { ColumnDef, DataTable } from "./ui/DataTable";
 import { MobileDataTable } from "./ui/MobileDataTable";
 import Image from "next/image";
@@ -92,6 +93,12 @@ export function InventoryList() {
     useState<(typeof pageSizeOptions)[number]>(10);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [activeMenuRow, setActiveMenuRow] = useState<string | null>(null);
+  const menuAnchorRef = useRef<HTMLDivElement | null>(null);
+  const isMenuFlipped = useAutoFlipDropdown(
+    menuAnchorRef,
+    Boolean(activeMenuRow),
+    setActiveMenuRow,
+  );
   const [activeRow, setActiveRow] = useState<InventoryRow | null>(null);
   const [isAdjustStockOpen, setIsAdjustStockOpen] = useState(false);
   const [isEditItemOpen, setIsEditItemOpen] = useState(false);
@@ -351,9 +358,11 @@ export function InventoryList() {
       headerClassName: "text-right",
       cellClassName: "text-right",
       cell: (row) => (
-        <div className="relative inline-block text-right">
+        <div
+          className="relative inline-block text-right"
+          ref={activeMenuRow === row.id ? menuAnchorRef : null}
+        >
           <button
-            type="button"
             onClick={(e) => {
               e.stopPropagation();
               setActiveMenuRow((current) =>
@@ -366,7 +375,12 @@ export function InventoryList() {
           </button>
 
           {activeMenuRow === row.id && (
-            <div className="absolute right-0 mt-2 w-48 overflow-hidden rounded-lg border border-slate-100 bg-white shadow-lg">
+            <div
+              className={cn(
+                "absolute right-0 z-10 w-48 rounded-lg border border-slate-100 bg-white shadow-lg z-50",
+                isMenuFlipped ? "bottom-full mb-2" : "top-full mt-2",
+              )}
+            >
               <button
                 type="button"
                 onClick={(e) => {
@@ -458,7 +472,10 @@ export function InventoryList() {
 
       <div className="flex items-center justify-between">
         {renderStockBadge(item)}
-        <div className="relative inline-block text-left">
+        <div
+          className="relative inline-block text-left"
+          ref={activeMenuRow === item.id ? menuAnchorRef : null}
+        >
           <button
             type="button"
             onClick={(e) => {
@@ -473,7 +490,12 @@ export function InventoryList() {
           </button>
 
           {activeMenuRow === item.id && (
-            <div className="absolute right-0 z-10 w-48 rounded-lg border border-slate-100 bg-white shadow-lg">
+            <div
+              className={cn(
+                "absolute right-0 z-10 w-48 rounded-lg border border-slate-100 bg-white shadow-lg",
+                isMenuFlipped ? "bottom-full mb-2" : "top-full mt-2",
+              )}
+            >
               <button
                 type="button"
                 onClick={(e) => {

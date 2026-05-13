@@ -6,8 +6,10 @@ import {
   Download,
   Edit,
   Eye,
+  MapPin,
   MoreHorizontal,
   Package,
+  Phone,
   Plus,
   Printer,
   Search,
@@ -25,7 +27,12 @@ import {
 } from "../lib/orders";
 import { Delivery, isSupabaseConfigured } from "../lib/supabase";
 import { updateDelivery } from "../lib/delivery";
-import { cn, getStatusClass, getStatusLabel } from "../lib/utils";
+import {
+  cn,
+  getStatusClass,
+  getStatusLabel,
+  useAutoFlipDropdown,
+} from "../lib/utils";
 import { ColumnDef, DataTable } from "./ui/DataTable";
 import { MobileDataTable } from "./ui/MobileDataTable";
 import { useGetDeliveries } from "@/hooks/delivery";
@@ -50,12 +57,12 @@ export type OpenModal = (
 ) => void;
 
 const tabs: { id: FilterTab; label: string }[] = [
-  { id: "category", label: "Category" },
+  // { id: "category", label: "Category" },
   { id: "delivery", label: "Delivery" },
 ];
 
 export function SettingList({ refreshTrigger }: { refreshTrigger: number }) {
-  const [activeTab, setActiveTab] = useState<FilterTab>("category");
+  const [activeTab, setActiveTab] = useState<FilterTab>("delivery");
   const [searchValue, setSearchValue] = useState("");
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] =
@@ -63,10 +70,18 @@ export function SettingList({ refreshTrigger }: { refreshTrigger: number }) {
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [activeModal, setActiveModal] = useState<ActiveModal>(null);
   const [selectedOrder, setSelectedOrder] = useState<OrderListRow | null>(null);
+  const [statusModalInitialValue, setStatusModalInitialValue] =
+    useState<OrderStatus | null>(null);
   const [selectedDelivery, setSelectedDelivery] = useState<Delivery | null>(
     null,
   );
   const menuRef = useRef<HTMLDivElement | null>(null);
+  const menuAnchorRef = useRef<HTMLDivElement | null>(null);
+  const isMenuFlipped = useAutoFlipDropdown(
+    menuAnchorRef,
+    Boolean(openMenuId),
+    setOpenMenuId,
+  );
   const queryClient = useQueryClient();
 
   const updateDeliveryStatusMutation = useMutation({
@@ -115,11 +130,13 @@ export function SettingList({ refreshTrigger }: { refreshTrigger: number }) {
     setSelectedDelivery(null);
   }
 
+  const statusFilter = activeTab as OrderStatus | "all";
+
   const { data, isLoading, isError, error, isFetching } = useQuery({
     queryKey: [
       "orders",
       refreshTrigger,
-      activeTab,
+      statusFilter,
       searchValue,
       page,
       pageSize,
@@ -129,7 +146,7 @@ export function SettingList({ refreshTrigger }: { refreshTrigger: number }) {
         page,
         pageSize,
         search: searchValue,
-        status: activeTab,
+        status: statusFilter,
       }),
     enabled: isSupabaseConfigured,
     placeholderData: (previousData) => previousData,
@@ -146,6 +163,14 @@ export function SettingList({ refreshTrigger }: { refreshTrigger: number }) {
   const startItem = totalCount === 0 ? 0 : (page - 1) * pageSize + 1;
   const endItem = totalCount === 0 ? 0 : startItem + orders.length - 1;
 
+  const handleToggle = async (deli: Delivery) => {
+    const newState = !deli.enabled;
+    updateDeliveryStatusMutation.mutate({
+      id: deli.id,
+      enabled: newState,
+    });
+  };
+
   const deliColumns: ColumnDef<Delivery>[] = [
     {
       header: "Name",
@@ -157,47 +182,39 @@ export function SettingList({ refreshTrigger }: { refreshTrigger: number }) {
     },
     {
       header: "Phone",
-      cell: (order) => (
-        <span className="text-sm text-slate-600">{order.phone ?? "-"}</span>
+      cell: (deli) => (
+        <span className="text-sm text-slate-600">{deli.phone ?? "-"}</span>
       ),
     },
     {
       header: "Address",
-      cell: (order) => (
-        <span className="text-sm text-slate-600">{order.address ?? "-"}</span>
+      cell: (deli) => (
+        <span className="text-sm text-slate-600">{deli.address ?? "-"}</span>
       ),
     },
     {
       header: "Status",
-      cell: (order) => {
-        const handleToggle = async () => {
-          const newState = !order.enabled;
-          updateDeliveryStatusMutation.mutate({
-            id: order.id,
-            enabled: newState,
-          });
-        };
-
+      cell: (deli) => {
         return (
           <div className="flex items-center gap-3">
             <button
-              onClick={handleToggle}
+              onClick={() => handleToggle(deli)}
               className={`
             relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full 
             transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2
-            ${order.enabled ? "bg-indigo-600" : "bg-slate-200"}
+            ${deli.enabled ? "bg-indigo-600" : "bg-slate-200"}
           `}
             >
               <span
                 className={`
               pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 
               transition duration-200 ease-in-out
-              ${order.enabled ? "translate-x-6" : "translate-x-1"}
+              ${deli.enabled ? "translate-x-6" : "translate-x-1"}
             `}
               />
             </button>
             <span className="text-sm font-medium text-slate-700">
-              {order.enabled ? "Enabled" : "Disabled"}
+              {deli.enabled ? "Enabled" : "Disabled"}
             </span>
           </div>
         );
@@ -210,301 +227,75 @@ export function SettingList({ refreshTrigger }: { refreshTrigger: number }) {
       cell: (deli) => (
         <button
           onClick={() => openDeliveryModal("edit-delivery", deli)}
-          className="inline-flex h-9 items-center gap-2 rounded-lg bg-indigo-600 px-3 py-1 text-xs font-semibold text-white shadow-sm transition hover:bg-indigo-700"
+          className="text-sm text-slate-700 hover:bg-slate-50"
         >
-          Edit
+          <Edit className="h-4 w-4" />
         </button>
       ),
     },
   ];
 
-  const columns: ColumnDef<OrderListRow>[] = [
-    {
-      header: "Name",
-      cell: (order) => (
-        <button className="text-sm font-semibold text-indigo-600 transition hover:text-indigo-700">
-          {order.shortId}
-        </button>
-      ),
-    },
-    {
-      header: "Date",
-      accessorKey: "date",
-      cellClassName: "text-sm text-slate-600",
-    },
-    {
-      header: "Customer",
-      cell: (order) => (
-        <div className="flex items-center gap-3">
-          <div
-            className={cn(
-              "flex h-9 w-9 items-center justify-center rounded-full text-xs font-semibold",
-              order.avatarClass,
-            )}
-          >
-            {order.avatar}
+  const renderOrderCard = (deli: Delivery) => (
+    <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+      <div className="max-w-md mx-auto">
+        {/* Header / Bulk Actions */}
+
+        {/* Card List */}
+        <div key={deli.id} className="">
+          {/* Card Header */}
+          <div className="p-4 border-b border-gray-50 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <h3 className="font-bold text-blue-700">{deli.name}</h3>
+            </div>
+            <button
+              onClick={() => openDeliveryModal("edit-delivery", deli)}
+              className="text-sm text-slate-700 hover:bg-slate-50"
+            >
+              <Edit className="h-4 w-4" />
+            </button>
           </div>
-          <span className="text-sm font-medium text-slate-900">
-            {order.customer}
-          </span>
-        </div>
-      ),
-    },
-    {
-      header: "Status",
-      cell: (order) => (
-        <span className={getStatusClass(order.status)}>
-          {getStatusLabel(order.status)}
-        </span>
-      ),
-    },
-    {
-      header: "Items",
-      accessorKey: "items",
-      cellClassName: "text-sm text-slate-600",
-    },
-    {
-      header: "Total",
-      accessorKey: "total",
-      headerClassName: "text-right",
-      cellClassName: "text-right text-sm font-semibold text-slate-900",
-    },
-    {
-      header: "Actions",
-      headerClassName: "text-right",
-      cellClassName: "text-right",
-      cell: (order) => (
-        <div className="relative inline-block text-left z-50">
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              setOpenMenuId((current) =>
-                current === order.id ? null : order.id,
-              );
-            }}
-            className="inline-flex h-9 w-9 items-center justify-center rounded-full text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
-          >
-            <MoreHorizontal className="h-4 w-4" />
-          </button>
 
-          {openMenuId === order.id && (
-            <div className="absolute right-0 z-10 w-48 rounded-lg border border-slate-100 bg-white shadow-lg">
-              {/* Group 1: View & Print */}
-              <div className="border-b border-slate-100 py-1">
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    openModal("view", order);
-                  }}
-                  className="flex w-full items-center gap-3 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
-                >
-                  <Eye className="h-4 w-4" />
-                  <span>View Details</span>
-                </button>
-                <button className="flex w-full items-center gap-3 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50">
-                  <Printer className="h-4 w-4" />
-                  <span>Print Invoice</span>
-                </button>
-              </div>
-
-              {/* Group 2: Edit & Update Status */}
-              <div className="border-b border-slate-100 py-1">
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    openModal("edit", order);
-                  }}
-                  className="flex w-full items-center gap-3 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
-                >
-                  <Edit className="h-4 w-4" />
-                  <span>Edit Order</span>
-                </button>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    openModal("update-status", order);
-                  }}
-                  className="flex w-full items-center gap-3 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
-                >
-                  <ArrowRightLeft className="h-4 w-4" />
-                  <span>Update Status</span>
-                </button>
-              </div>
-
-              {/* Group 3: Cancel & Delete (Danger Actions) */}
-              <div className="py-1">
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    openModal("update-status", order, "canceled");
-                  }}
-                  className="flex w-full items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50"
-                >
-                  <XCircle className="h-4 w-4" />
-                  <span>Cancel Order</span>
-                </button>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    openModal("delete", order);
-                  }}
-                  className="flex w-full items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50"
-                >
-                  <Trash2 className="h-4 w-4" />
-                  <span>Delete Order</span>
-                </button>
-              </div>
+          {/* Card Body (Conditional Rendering for empty fields) */}
+          {(deli.phone || deli.address) && (
+            <div className="p-4 space-y-3 bg-gray-50/50 rounded-xl">
+              {deli.phone && (
+                <div className="flex items-start gap-3">
+                  <Phone className="h-4 w-4" />
+                  <span className="text-sm text-gray-600">{deli.phone}</span>
+                </div>
+              )}
+              {deli.address && (
+                <div className="flex items-start gap-3">
+                  <MapPin className="h-6 w-6" />
+                  <span className="text-sm text-gray-600 leading-snug">
+                    {deli.address}
+                  </span>
+                </div>
+              )}
             </div>
           )}
-        </div>
-      ),
-    },
-  ];
 
-  const renderOrderCard = (order: OrderListRow) => (
-    <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-3">
-          <input
-            type="checkbox"
-            className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
-          />
-          <button className="text-sm font-semibold text-indigo-600 transition hover:text-indigo-700">
-            {order.shortId}
-          </button>
-        </div>
-        <span className="text-xs text-slate-500">{order.date}</span>
-      </div>
-
-      {/* <div className="flex items-center gap-3 mb-3">
-        <div
-          className={cn(
-            "flex h-9 w-9 items-center justify-center rounded-full text-xs font-semibold",
-            order.avatarClass,
-          )}
-        >
-          {order.avatar}
-        </div>
-        <span className="text-sm font-medium text-slate-900">
-          {order.customer}
-        </span>
-      </div> */}
-
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-3">
-          <div
-            className={cn(
-              "flex h-10 w-10 items-center justify-center rounded-full text-xs font-bold",
-              order.avatarClass,
-            )}
-          >
-            {order.avatar}
-          </div>
-          <span className="text-sm font-semibold text-slate-900">
-            {order.customer}
-          </span>
-        </div>
-
-        <div className="text-right">
-          <div className="text-xs text-slate-600 uppercase">{order.items}</div>
-          <div className="text-sm font-bold text-slate-900">{order.total}</div>
-        </div>
-      </div>
-
-      <div className="flex items-center justify-between border-t border-slate-50 pt-3">
-        <div className="flex flex-col gap-1">
-          <span className="text-[10px] uppercase tracking-wider text-slate-400 font-bold">
-            Status
-          </span>
-          <span className={getStatusClass(order.status)}>
-            {getStatusLabel(order.status)}
-          </span>
-        </div>
-
-        {/* Action Button */}
-        <div className="flex items-center gap-4">
-          <div className="relative inline-block text-left">
+          {/* Card Footer (Status Toggle) */}
+          <div className="flex items-center gap-3">
             <button
-              onClick={(e) => {
-                e.stopPropagation();
-                setOpenMenuId((current) =>
-                  current === order.id ? null : order.id,
-                );
-              }}
-              className="inline-flex h-9 w-9 items-center justify-center rounded-full text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+              onClick={() => handleToggle(deli)}
+              className={`
+            relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full 
+            transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2
+            ${deli.enabled ? "bg-indigo-600" : "bg-slate-200"}
+          `}
             >
-              <MoreHorizontal className="h-4 w-4" />
+              <span
+                className={`
+              pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 
+              transition duration-200 ease-in-out
+              ${deli.enabled ? "translate-x-6" : "translate-x-1"}
+            `}
+              />
             </button>
-
-            {openMenuId === order.id && (
-              <div className="absolute right-0 z-10 w-48 rounded-lg border border-slate-100 bg-white shadow-lg">
-                {/* Group 1: View & Print */}
-                <div className="border-b border-slate-100 py-1">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      openModal("view", order);
-                    }}
-                    className="flex w-full items-center gap-3 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
-                  >
-                    <Eye className="h-4 w-4" />
-                    <span>View Details</span>
-                  </button>
-                  <button className="flex w-full items-center gap-3 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50">
-                    <Printer className="h-4 w-4" />
-                    <span>Print Invoice</span>
-                  </button>
-                </div>
-
-                {/* Group 2: Edit & Update Status */}
-                <div className="border-b border-slate-100 py-1">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      openModal("edit", order);
-                    }}
-                    className="flex w-full items-center gap-3 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
-                  >
-                    <Edit className="h-4 w-4" />
-                    <span>Edit Order</span>
-                  </button>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      openModal("update-status", order);
-                    }}
-                    className="flex w-full items-center gap-3 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
-                  >
-                    <ArrowRightLeft className="h-4 w-4" />
-                    <span>Update Status</span>
-                  </button>
-                </div>
-
-                {/* Group 3: Cancel & Delete (Danger Actions) */}
-                <div className="py-1">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      openModal("update-status", order, "canceled");
-                    }}
-                    className="flex w-full items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50"
-                  >
-                    <XCircle className="h-4 w-4" />
-                    <span>Cancel Order</span>
-                  </button>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      openModal("delete", order);
-                    }}
-                    className="flex w-full items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                    <span>Delete Order</span>
-                  </button>
-                </div>
-              </div>
-            )}
+            <span className="text-sm font-medium text-slate-700">
+              {deli.enabled ? "Enabled" : "Disabled"}
+            </span>
           </div>
         </div>
       </div>
@@ -608,47 +399,27 @@ export function SettingList({ refreshTrigger }: { refreshTrigger: number }) {
       {isSupabaseConfigured && !isLoading && !isError && (
         <>
           {/* Desktop Table View */}
-          <div className="">
-            {activeTab === "category" ? (
-              <DataTable
-                data={orders}
-                columns={columns}
-                isFetching={isFetching}
-                hasSelection={true}
-                keyExtractor={(order) => order.id}
-                page={page}
-                pageCount={pageCount}
-                startItem={startItem}
-                endItem={endItem}
-                totalCount={totalCount}
-                onPageChange={setPage}
-                emptyStateTitle="No orders found"
-                emptyStateDescription="New orders from Supabase will appear here."
-              />
-            ) : (
-              <DataTable
-                data={deliveries || []}
-                columns={deliColumns}
-                isFetching={isFetching}
-                hasSelection={true}
-                keyExtractor={(deli) => deli.id}
-                page={1}
-                pageCount={1}
-                startItem={1}
-                endItem={deliveries ? deliveries.length : 0}
-                totalCount={deliveries ? deliveries.length : 0}
-                onPageChange={() => {}}
-                emptyStateTitle="No deliveries found"
-                emptyStateDescription="New deliveries from Supabase will appear here."
-              />
-            )}
+          <div className="hidden md:block">
+            <DataTable
+              data={deliveries || []}
+              columns={deliColumns}
+              isFetching={isFetching}
+              hasSelection={true}
+              keyExtractor={(deli) => deli.id}
+              page={1}
+              pageCount={1}
+              startItem={1}
+              endItem={deliveries ? deliveries.length : 0}
+              totalCount={deliveries ? deliveries.length : 0}
+              onPageChange={() => {}}
+              emptyStateTitle="No deliveries found"
+              emptyStateDescription="New deliveries from Supabase will appear here."
+            />
           </div>
 
-          {/* Mobile Card View */}
-          {/* <div className="block md:hidden">
-            {activeTab === "category" ? (
+          <div className="block md:hidden">
             <MobileDataTable
-              data={orders}
+              data={deliveries || []}
               isFetching={isFetching}
               page={page}
               pageCount={pageCount}
@@ -656,28 +427,12 @@ export function SettingList({ refreshTrigger }: { refreshTrigger: number }) {
               endItem={endItem}
               totalCount={totalCount}
               onPageChange={setPage}
-              keyExtractor={(order) => order.id}
+              keyExtractor={(deli) => deli.id}
               renderRow={renderOrderCard}
-              emptyStateTitle="No orders found"
+              emptyStateTitle="No deliveries found"
               emptyStateDescription="New orders from Supabase will appear here."
             />
-            ) : (
-              <MobileDataTable
-                data={deliveries || []}
-                isFetching={isFetching}
-                page={page}
-                pageCount={pageCount}
-                startItem={startItem}
-                endItem={endItem}
-                totalCount={totalCount}
-                onPageChange={setPage}
-                keyExtractor={(deli) => deli.id}
-                renderRow={renderDeliveryCard}
-                emptyStateTitle="No deliveries found"
-              emptyStateDescription="New orders from Supabase will appear here."
-            />
-            )}
-          </div> */}
+          </div>
         </>
       )}
     </div>
