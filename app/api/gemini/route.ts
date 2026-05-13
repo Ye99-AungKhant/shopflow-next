@@ -69,6 +69,10 @@ const orderSchema = {
           type: Type.STRING,
           description: "Must be exactly 'delivery' or 'completed'",
         },
+        date: {
+          type: Type.STRING,
+          description: "Must be exactly order date",
+        },
       },
     },
   },

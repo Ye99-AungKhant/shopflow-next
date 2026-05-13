@@ -3,6 +3,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { Send, Loader2 } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import { GoogleGenAI, Type } from "@google/genai";
+import { getCookie } from "@/lib/utils";
 
 type Message = {
   id: string;
@@ -31,8 +32,10 @@ export function AiOrderEntry({ onOrderAdded }: { onOrderAdded: () => void }) {
   const [input, setInput] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [userId, setUserId] = useState<string | undefined>();
 
   useEffect(() => {
+    setUserId(getCookie("user_id"));
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
@@ -171,7 +174,7 @@ export function AiOrderEntry({ onOrderAdded }: { onOrderAdded: () => void }) {
         const { data: existingDelivery, error: dSearchError } = await supabase
           .from("delivery")
           .select("id")
-          .eq("name", orderInfo.delivery.name)
+          .ilike("name", `%${orderInfo.delivery.name}%`)
           .limit(1)
           .maybeSingle();
 
@@ -216,7 +219,10 @@ export function AiOrderEntry({ onOrderAdded }: { onOrderAdded: () => void }) {
         )
           ? orderInfo.status.toLowerCase()
           : "delivery";
-
+        const now = new Date();
+        const dateObj =
+          new Date(`${orderInfo.date}, ${now.getFullYear()}`) || new Date();
+        const timestampTZ = dateObj.toISOString();
         const { data: newOrder, error: oInsError } = await supabase
           .from("orders")
           .insert({
@@ -224,6 +230,8 @@ export function AiOrderEntry({ onOrderAdded }: { onOrderAdded: () => void }) {
             delivery_id: deliveryId,
             status,
             total_price: totalPrice,
+            created_at: timestampTZ,
+            user_id: userId,
           })
           .select()
           .single();

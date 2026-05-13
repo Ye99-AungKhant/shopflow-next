@@ -2,13 +2,18 @@
 
 import { useState, useEffect, useRef } from "react";
 import { LogOut } from "lucide-react"; // Assuming you are using lucide-react
+import { getCookie } from "@/lib/utils";
 
 export default function UserMenu({ logout }: { logout: () => void }) {
   const [isOpen, setIsOpen] = useState(false);
+  const [userId, setUserId] = useState<string | undefined>();
+  const [userName, setUserName] = useState<string | undefined>();
   const menuRef = useRef<HTMLDivElement>(null);
 
   // Close the dropdown if the user clicks anywhere outside of it
   useEffect(() => {
+    setUserId(getCookie("user_id"));
+    setUserName(getCookie("user_name"));
     const handleClickOutside = (event: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
         setIsOpen(false);
@@ -30,12 +35,14 @@ export default function UserMenu({ logout }: { logout: () => void }) {
       >
         {/* Avatar */}
         <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-violet-500 text-sm font-semibold text-white shadow-inner">
-          SF
+          {userName || "Sophie Flow"}
         </div>
 
         {/* Desktop Info (Hidden on Mobile) */}
         <div className="hidden text-left sm:block">
-          <p className="text-sm font-semibold text-slate-900">Sophie Flow</p>
+          <p className="text-sm font-semibold text-slate-900">
+            {userName || "Sophie Flow"}
+          </p>
           <p className="text-xs text-slate-500">Admin</p>
         </div>
 
@@ -56,7 +63,9 @@ export default function UserMenu({ logout }: { logout: () => void }) {
       {isOpen && (
         <div className="absolute right-0 top-full mt-2 w-56 origin-top-right rounded-2xl border border-slate-100 bg-white p-4 shadow-xl shadow-slate-200/50 sm:hidden z-50">
           <div className="mb-3 border-b border-slate-100 pb-3 text-left">
-            <p className="text-sm font-bold text-slate-900">Sophie Flow</p>
+            <p className="text-sm font-bold text-slate-900">
+              {userName || "Sophie Flow"}
+            </p>
             <p className="text-xs font-medium text-slate-500">Admin</p>
           </div>
           <button

@@ -88,3 +88,9 @@ export function getStatusClass(status: OrderStatus) {
       return "bg-slate-100 text-slate-700 font-medium px-2.5 py-0.5 rounded-full text-xs";
   }
 }
+
+export function getCookie(name: string): string | undefined {
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) return parts.pop()?.split(";").shift();
+}
