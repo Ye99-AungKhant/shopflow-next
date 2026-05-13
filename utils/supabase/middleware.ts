@@ -1,6 +1,19 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
+const publicAssetPaths = new Set([
+  "/manifest.webmanifest",
+  "/manifest.json",
+  "/sw.js",
+  "/favicon.ico",
+  "/apple-icon.png",
+  "/icon0.svg",
+  "/icon1.png",
+  "/logo.png",
+  "/web-app-manifest-192x192.png",
+  "/web-app-manifest-512x512.png",
+]);
+
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
     request,
@@ -15,7 +28,7 @@ export async function updateSession(request: NextRequest) {
           return request.cookies.getAll();
         },
         setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) =>
+          cookiesToSet.forEach(({ name, value }) =>
             request.cookies.set(name, value),
           );
           supabaseResponse = NextResponse.next({
@@ -36,8 +49,8 @@ export async function updateSession(request: NextRequest) {
 
   const pathname = request.nextUrl.pathname;
 
-  // Allow API routes to run without redirecting.
-  if (pathname.startsWith("/api")) {
+  // Allow API routes and PWA/static metadata assets to run without redirecting.
+  if (pathname.startsWith("/api") || publicAssetPaths.has(pathname)) {
     return supabaseResponse;
   }
 
