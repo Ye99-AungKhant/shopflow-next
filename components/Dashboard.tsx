@@ -338,7 +338,7 @@ export function Dashboard({ refreshTrigger }: { refreshTrigger: number }) {
                         alt={product.name}
                         width={50}
                         height={50}
-                        className="rounded-xl object-cover"
+                        className="rounded-xl object-cover w-auto h-auto"
                       />
                     ) : (
                       <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-200 text-slate-500">
