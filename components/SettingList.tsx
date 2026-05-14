@@ -1,8 +1,11 @@
 "use client";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowRightLeft,
+  Check,
+  Copy,
+  CreditCard,
   Download,
   Edit,
   Eye,
@@ -14,6 +17,7 @@ import {
   Printer,
   Search,
   Trash2,
+  Truck,
   XCircle,
 } from "lucide-react";
 import { DeleteOrderModal } from "./orders/DeleteOrderModal";
@@ -25,7 +29,7 @@ import {
   type OrderListRow,
   type OrderStatus,
 } from "../lib/orders";
-import { Delivery, isSupabaseConfigured } from "../lib/supabase";
+import { Delivery, isSupabaseConfigured, Payment } from "../lib/supabase";
 import { updateDelivery } from "../lib/delivery";
 import {
   cn,
@@ -38,6 +42,12 @@ import { MobileDataTable } from "./ui/MobileDataTable";
 import { useGetDeliveries } from "@/hooks/delivery";
 import { DeliverySettings } from "./settings/DeliverySettings";
 import { DeliveryModal } from "./settings/DeliveryModal";
+import { paymentMethodColumns } from "./settings/PaymentMethodColumn";
+import {
+  useGetPayments,
+  useUpdatePaymentStatusMutation,
+} from "@/hooks/payment";
+import { PaymentModal } from "./settings/PaymentModal";
 
 type FilterTab = string;
 const pageSizeOptions = [10, 50, 100] as const;
@@ -48,6 +58,8 @@ type ActiveModal =
   | "delete"
   | "create-delivery"
   | "edit-delivery"
+  | "create-payment"
+  | "edit-payment"
   | null;
 
 export type OpenModal = (
@@ -57,8 +69,8 @@ export type OpenModal = (
 ) => void;
 
 const tabs: { id: FilterTab; label: string }[] = [
-  // { id: "category", label: "Category" },
   { id: "delivery", label: "Delivery" },
+  { id: "payment", label: "Payment Method" },
 ];
 
 export function SettingList({ refreshTrigger }: { refreshTrigger: number }) {
@@ -75,6 +87,7 @@ export function SettingList({ refreshTrigger }: { refreshTrigger: number }) {
   const [selectedDelivery, setSelectedDelivery] = useState<Delivery | null>(
     null,
   );
+  const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
   const menuRef = useRef<HTMLDivElement | null>(null);
   const menuAnchorRef = useRef<HTMLDivElement | null>(null);
   const isMenuFlipped = useAutoFlipDropdown(
@@ -82,7 +95,10 @@ export function SettingList({ refreshTrigger }: { refreshTrigger: number }) {
     Boolean(openMenuId),
     setOpenMenuId,
   );
+  const [copied, setCopied] = useState(false);
   const queryClient = useQueryClient();
+  const { mutate: paymentMuate, isPending: paymentPending } =
+    useUpdatePaymentStatusMutation();
 
   const updateDeliveryStatusMutation = useMutation({
     mutationFn: ({ id, enabled }: { id: string; enabled: boolean }) =>
@@ -116,10 +132,18 @@ export function SettingList({ refreshTrigger }: { refreshTrigger: number }) {
   };
 
   const openDeliveryModal = (
-    type: "create-delivery" | "edit-delivery",
-    delivery?: Delivery,
+    type:
+      | "create-delivery"
+      | "edit-delivery"
+      | "create-payment"
+      | "edit-payment",
+    editData?: Delivery | Payment,
   ) => {
-    setSelectedDelivery(delivery || null);
+    if (activeTab === "delivery") {
+      setSelectedDelivery((editData as Delivery) || null);
+    } else {
+      setSelectedPayment((editData as Payment) || null);
+    }
     setActiveModal(type);
   };
 
@@ -132,43 +156,42 @@ export function SettingList({ refreshTrigger }: { refreshTrigger: number }) {
 
   const statusFilter = activeTab as OrderStatus | "all";
 
-  const { data, isLoading, isError, error, isFetching } = useQuery({
-    queryKey: [
-      "orders",
-      refreshTrigger,
-      statusFilter,
-      searchValue,
-      page,
-      pageSize,
-    ],
-    queryFn: () =>
-      fetchOrders({
-        page,
-        pageSize,
-        search: searchValue,
-        status: statusFilter,
-      }),
-    enabled: isSupabaseConfigured,
-    placeholderData: (previousData) => previousData,
-  });
-
   const {
     data: deliveries,
     isLoading: isLoadingDelivery,
     isFetched: isFetchedDelivery,
+    isError,
+    error,
   } = useGetDeliveries();
-  const orders = data?.rows ?? [];
-  const totalCount = data?.totalCount ?? 0;
-  const pageCount = data?.pageCount ?? 0;
-  const startItem = totalCount === 0 ? 0 : (page - 1) * pageSize + 1;
-  const endItem = totalCount === 0 ? 0 : startItem + orders.length - 1;
 
-  const handleToggle = async (deli: Delivery) => {
-    const newState = !deli.enabled;
-    updateDeliveryStatusMutation.mutate({
-      id: deli.id,
-      enabled: newState,
-    });
+  const {
+    data: payments,
+    isLoading: isLoadingPayment,
+    isFetched: isFetchedPayment,
+    isError: isPaymentError,
+    error: paymentError,
+  } = useGetPayments();
+
+  const handleToggle = async (enableData: Delivery | Payment) => {
+    const newState = !enableData.enabled;
+    if (activeTab === "delivery") {
+      updateDeliveryStatusMutation.mutate({
+        id: enableData.id,
+        enabled: newState,
+      });
+    } else {
+      paymentMuate({
+        id: enableData.id,
+        enabled: newState,
+      });
+    }
+  };
+
+  const handleCopy = (text: string) => {
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    // Reset the icon back to "Copy" after 2 seconds
+    setTimeout(() => setCopied(false), 2000);
   };
 
   const deliColumns: ColumnDef<Delivery>[] = [
@@ -235,72 +258,271 @@ export function SettingList({ refreshTrigger }: { refreshTrigger: number }) {
     },
   ];
 
-  const renderOrderCard = (deli: Delivery) => (
-    <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-      <div className="max-w-md mx-auto">
-        {/* Header / Bulk Actions */}
-
-        {/* Card List */}
-        <div key={deli.id} className="">
-          {/* Card Header */}
-          <div className="p-4 border-b border-gray-50 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <h3 className="font-bold text-blue-700">{deli.name}</h3>
-            </div>
+  const paymentColumns: ColumnDef<Payment>[] = [
+    {
+      header: "Name",
+      cell: (payment) => (
+        <button className="text-sm font-semibold text-indigo-600 transition hover:text-indigo-700">
+          {payment.name}
+        </button>
+      ),
+    },
+    {
+      header: "Name",
+      cell: (payment) => (
+        <span className="text-sm text-slate-600">{payment.name ?? "-"}</span>
+      ),
+    },
+    {
+      header: "Account No.",
+      cell: (payment) => (
+        <span className="text-sm text-slate-600">
+          {payment.account_number ?? "-"}
+        </span>
+      ),
+    },
+    {
+      header: "Status",
+      cell: (payment) => {
+        return (
+          <div className="flex items-center gap-3">
             <button
-              onClick={() => openDeliveryModal("edit-delivery", deli)}
-              className="text-sm text-slate-700 hover:bg-slate-50"
+              onClick={() => handleToggle(payment)}
+              className={`
+                relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full 
+                transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2
+                ${payment.enabled ? "bg-indigo-600" : "bg-slate-200"}
+              `}
             >
-              <Edit className="h-4 w-4" />
+              <span
+                className={`
+                  pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 
+                  transition duration-200 ease-in-out
+                  ${payment.enabled ? "translate-x-6" : "translate-x-1"}
+                `}
+              />
             </button>
+            <span className="text-sm font-medium text-slate-700">
+              {payment.enabled ? "Enabled" : "Disabled"}
+            </span>
+          </div>
+        );
+      },
+    },
+    {
+      header: "Actions",
+      headerClassName: "text-right",
+      cellClassName: "text-right",
+      cell: (payment) => (
+        <button
+          // Assuming you have a payment modal rather than delivery here
+          onClick={() => openDeliveryModal("edit-payment", payment)}
+          className="text-sm text-slate-700 hover:bg-slate-50 p-1 rounded"
+        >
+          <Edit className="h-4 w-4" />
+        </button>
+      ),
+    },
+  ];
+
+  const renderOrderCard = (deli: Delivery) => (
+    <div className="max-w-md mx-auto space-y-3">
+      {/* Card List Item */}
+      <div
+        key={deli.id}
+        className="group relative flex items-center justify-between rounded-2xl border border-slate-200 bg-white p-5 transition-all hover:border-indigo-200 hover:shadow-md hover:shadow-indigo-500/5"
+      >
+        {/* Left Side: Icon & Provider Info */}
+        <div className="flex items-center gap-4 min-w-0">
+          {/* Brand Icon Box */}
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-slate-50 text-slate-400 transition-colors group-hover:bg-indigo-600 group-hover:text-white">
+            <Truck className="h-6 w-6" />
           </div>
 
-          {/* Card Body (Conditional Rendering for empty fields) */}
-          {(deli.phone || deli.address) && (
-            <div className="p-4 space-y-3 bg-gray-50/50 rounded-xl">
+          {/* Text Content */}
+          <div className="flex flex-col min-w-0">
+            <h3 className="text-sm font-bold text-slate-900 truncate transition-colors group-hover:text-indigo-600">
+              {deli.name}
+            </h3>
+
+            {/* Compact Details (Conditional) */}
+            <div className="flex flex-col gap-0.5 mt-0.5">
               {deli.phone && (
-                <div className="flex items-start gap-3">
-                  <Phone className="h-4 w-4" />
-                  <span className="text-sm text-gray-600">{deli.phone}</span>
+                <div className="group/phone flex items-center gap-1.5 text-[11px] font-medium text-slate-500">
+                  <Phone className="h-3 w-3" />
+                  <span>{deli.phone}</span>
+
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation(); // Prevent triggering any card-level clicks
+                      handleCopy(deli.phone);
+                    }}
+                    className="ml-1 flex items-center opacity-0 transition-all group-hover/phone:opacity-100 hover:text-indigo-600"
+                    title="Copy to clipboard"
+                  >
+                    {copied ? (
+                      <Check className="h-3.5 w-3.5 text-emerald-500" />
+                    ) : (
+                      <Copy className="h-3.5 w-3.5" />
+                    )}
+                  </button>
                 </div>
               )}
               {deli.address && (
-                <div className="flex items-start gap-3">
-                  <MapPin className="h-6 w-6" />
-                  <span className="text-sm text-gray-600 leading-snug">
-                    {deli.address}
-                  </span>
+                <div className="flex items-center gap-1.5 text-[11px] text-slate-400">
+                  <MapPin className="h-3 w-3 shrink-0" />
+                  <span>{deli.address}</span>
                 </div>
               )}
+              {!deli.phone && !deli.address && (
+                <span className="text-[11px] italic text-slate-300">
+                  No contact info
+                </span>
+              )}
             </div>
-          )}
+          </div>
+        </div>
 
-          {/* Card Footer (Status Toggle) */}
-          <div className="flex items-center gap-3">
+        {/* Right Side: Status Toggle & Edit Action */}
+        <div className="flex flex-col items-center gap-2 shrink-0 ml-4">
+          {/* Edit Action Button */}
+          <button
+            onClick={() => openDeliveryModal("edit-delivery", deli)}
+            className="rounded-full text-slate-400 transition-colors hover:bg-slate-50 hover:text-indigo-600"
+          >
+            <Edit className="h-4 w-4" />
+          </button>
+
+          {/* Subtle horizon Divider */}
+          <div className="h-px w-8 bg-slate-100" />
+
+          {/* Status Toggle Group */}
+
+          <div className="flex flex-col items-end gap-1">
             <button
               onClick={() => handleToggle(deli)}
               className={`
-            relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full 
+            relative inline-flex h-5 w-10 shrink-0 cursor-pointer items-center rounded-full 
             transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2
             ${deli.enabled ? "bg-indigo-600" : "bg-slate-200"}
           `}
             >
               <span
                 className={`
-              pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 
+              pointer-events-none inline-block h-3 w-3 transform rounded-full bg-white shadow ring-0 
               transition duration-200 ease-in-out
               ${deli.enabled ? "translate-x-6" : "translate-x-1"}
             `}
               />
             </button>
-            <span className="text-sm font-medium text-slate-700">
-              {deli.enabled ? "Enabled" : "Disabled"}
+            <span className="text-[10px] font-bold uppercase tracking-tight text-slate-400">
+              {deli.enabled ? "Active" : "Disable"}
             </span>
           </div>
         </div>
       </div>
     </div>
   );
+
+  const renderPaymentCard = (payment: Payment) => (
+    <div
+      key={payment.id}
+      className="group relative flex items-center justify-between rounded-2xl border border-slate-200 bg-white p-5 transition-all hover:border-indigo-200 hover:shadow-md hover:shadow-indigo-500/5"
+    >
+      {/* Left Side: Brand Icon & Info */}
+      <div className="flex items-center gap-4">
+        {/* Dynamic Icon Box */}
+        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-slate-50 text-slate-400 transition-colors group-hover:bg-indigo-600 group-hover:text-white">
+          <CreditCard className="h-6 w-6" />
+        </div>
+
+        <div className="flex flex-col">
+          <h3 className="text-sm font-bold text-slate-900 transition-colors group-hover:text-indigo-600">
+            {payment.name}
+          </h3>
+          {payment.account_number && (
+            <span className="text-xs font-medium tracking-wider text-slate-500">
+              {payment.account_number}
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* Right Side: Status Toggle & Actions */}
+      <div className="flex flex-col items-center gap-2">
+        {/* Edit Action */}
+        <button
+          onClick={() => openDeliveryModal("edit-payment", payment)}
+          className="rounded-full text-slate-400 transition-colors hover:bg-slate-50 hover:text-indigo-600"
+        >
+          <Edit className="h-4 w-4" />
+        </button>
+
+        {/* Vertical Divider */}
+        <div className="h-px w-8 bg-slate-100" />
+
+        {/* Status Toggle Group */}
+        <div className="flex flex-col items-end gap-1">
+          <button
+            onClick={() => handleToggle(payment)}
+            className={`
+          relative inline-flex h-5 w-10 shrink-0 cursor-pointer items-center rounded-full 
+          transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2
+          ${payment.enabled ? "bg-indigo-600" : "bg-slate-200"}
+        `}
+          >
+            <span
+              className={`
+            pointer-events-none inline-block h-3 w-3 transform rounded-full bg-white shadow ring-0 
+            transition duration-200 ease-in-out
+            ${payment.enabled ? "translate-x-6" : "translate-x-1"}
+          `}
+            />
+          </button>
+          <span className="text-[10px] font-bold uppercase tracking-tight text-slate-400">
+            {payment.enabled ? "Active" : "Disable"}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+
+  const handleAddNew = () => {
+    if (activeTab === "delivery") {
+      openDeliveryModal("create-delivery");
+    } else {
+      openDeliveryModal("create-payment");
+    }
+  };
+
+  const tableConfig = useMemo(() => {
+    switch (activeTab) {
+      case "delivery":
+        return {
+          data: deliveries || [],
+          columns: deliColumns,
+          isFetching: isFetchedDelivery, // Use delivery fetching state
+          emptyTitle: "No deliveries found",
+          emptyDesc: "New deliveries from Supabase will appear here.",
+        };
+      case "payment":
+        return {
+          data: payments || [],
+          columns: paymentColumns, // Your fixed payment columns
+          isFetching: isFetchedPayment, // Use payment fetching state
+          emptyTitle: "No payment methods found",
+          emptyDesc: "New payment methods from Supabase will appear here.",
+        };
+      default:
+        return {
+          data: [],
+          columns: [],
+          isFetching: false,
+          emptyTitle: "No data found",
+          emptyDesc: "",
+        };
+    }
+  }, [activeTab, deliveries, payments, isFetchedDelivery, isFetchedPayment]);
 
   return (
     <div className="space-y-6">
@@ -310,6 +532,13 @@ export function SettingList({ refreshTrigger }: { refreshTrigger: number }) {
         }
         onClose={closeModal}
         delivery={selectedDelivery}
+      />
+      <PaymentModal
+        isOpen={
+          activeModal === "create-payment" || activeModal === "edit-payment"
+        }
+        onClose={closeModal}
+        payment={selectedPayment}
       />
 
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
@@ -367,7 +596,7 @@ export function SettingList({ refreshTrigger }: { refreshTrigger: number }) {
           </label>
           <button
             type="button"
-            onClick={() => openDeliveryModal("create-delivery")}
+            onClick={handleAddNew}
             className="inline-flex h-11 items-center gap-2 rounded-xl bg-indigo-600 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700"
           >
             <Plus className="h-4 w-4" />
@@ -383,7 +612,7 @@ export function SettingList({ refreshTrigger }: { refreshTrigger: number }) {
         </div>
       )}
 
-      {isSupabaseConfigured && isLoading && (
+      {isSupabaseConfigured && isLoadingDelivery && (
         <div className="rounded-3xl bg-white p-8 text-center text-slate-500 shadow-sm">
           Loading orders...
         </div>
@@ -396,42 +625,61 @@ export function SettingList({ refreshTrigger }: { refreshTrigger: number }) {
         </div>
       )}
 
-      {isSupabaseConfigured && !isLoading && !isError && (
+      {isSupabaseConfigured && !isLoadingDelivery && !isError && (
         <>
           {/* Desktop Table View */}
           <div className="hidden md:block">
             <DataTable
-              data={deliveries || []}
-              columns={deliColumns}
-              isFetching={isFetching}
+              // Dynamic Props
+              data={tableConfig.data as any[]}
+              columns={tableConfig.columns as any}
+              isFetching={tableConfig.isFetching}
+              emptyStateTitle={tableConfig.emptyTitle}
+              emptyStateDescription={tableConfig.emptyDesc}
+              // Static / Generic Props
               hasSelection={true}
-              keyExtractor={(deli) => deli.id}
+              keyExtractor={(item) => item.id}
               page={1}
               pageCount={1}
               startItem={1}
-              endItem={deliveries ? deliveries.length : 0}
-              totalCount={deliveries ? deliveries.length : 0}
+              endItem={tableConfig.data.length}
+              totalCount={tableConfig.data.length}
               onPageChange={() => {}}
-              emptyStateTitle="No deliveries found"
-              emptyStateDescription="New deliveries from Supabase will appear here."
             />
           </div>
 
           <div className="block md:hidden">
-            <MobileDataTable
-              data={deliveries || []}
-              isFetching={isFetching}
-              page={page}
-              pageCount={pageCount}
-              startItem={startItem}
-              endItem={endItem}
-              totalCount={totalCount}
-              onPageChange={setPage}
-              keyExtractor={(deli) => deli.id}
-              renderRow={renderOrderCard}
-              emptyStateTitle="No deliveries found"
-              emptyStateDescription="New orders from Supabase will appear here."
-            />
+            {activeTab === "delivery" ? (
+              <MobileDataTable
+                data={deliveries || []}
+                isFetching={isFetchedDelivery}
+                page={page}
+                pageCount={1}
+                startItem={1}
+                endItem={tableConfig.data.length}
+                totalCount={tableConfig.data.length}
+                onPageChange={setPage}
+                keyExtractor={(deli) => deli.id}
+                renderRow={renderOrderCard}
+                emptyStateTitle="No deliveries found"
+                emptyStateDescription="New orders from Supabase will appear here."
+              />
+            ) : (
+              <MobileDataTable
+                data={payments || []}
+                isFetching={isFetchedPayment}
+                page={page}
+                pageCount={1}
+                startItem={1}
+                endItem={tableConfig.data.length}
+                totalCount={tableConfig.data.length}
+                onPageChange={setPage}
+                keyExtractor={(deli) => deli.id}
+                renderRow={renderPaymentCard}
+                emptyStateTitle="No payments found"
+                emptyStateDescription="New orders from Supabase will appear here."
+              />
+            )}
           </div>
         </>
       )}

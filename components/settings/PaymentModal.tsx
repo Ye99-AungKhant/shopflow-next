@@ -2,13 +2,13 @@
 import { useEffect, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Modal } from "../ui/Modal";
-import { createDelivery, updateDelivery } from "../../lib/delivery";
-import { Delivery } from "@/lib/supabase";
+import { Payment } from "@/lib/supabase";
+import { createPayment, updatePayment } from "@/lib/payment";
 
-type DeliveryModalProps = {
+type PaymentModalProps = {
   isOpen: boolean;
   onClose: () => void;
-  delivery: Delivery | null; // null for create, existing for edit
+  payment: Payment | null; // null for create, existing for edit
 };
 
 const fieldLabelClass =
@@ -16,66 +16,59 @@ const fieldLabelClass =
 const inputClass =
   "w-full rounded-lg border border-slate-200 p-2.5 text-sm text-slate-900 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500";
 
-export function DeliveryModal({
-  isOpen,
-  onClose,
-  delivery,
-}: DeliveryModalProps) {
+export function PaymentModal({ isOpen, onClose, payment }: PaymentModalProps) {
   const [name, setName] = useState("");
-  const [phone, setPhone] = useState("");
-  const [address, setAddress] = useState("");
+  const [accountNumber, setAccountNumber] = useState("");
   const [enabled, setEnabled] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
   const queryClient = useQueryClient();
 
-  const isEdit = Boolean(delivery);
+  const isEdit = Boolean(payment);
 
   useEffect(() => {
     if (isOpen) {
-      if (delivery) {
+      if (payment) {
         // Edit mode: populate fields
-        setName(delivery.name);
-        setPhone(delivery.phone);
-        setAddress(delivery.address || "");
-        setEnabled(delivery.enabled);
+        setName(payment.name);
+        setAccountNumber(payment.account_number || "");
+        setEnabled(payment.enabled);
       } else {
         // Create mode: reset fields
         setName("");
-        setPhone("");
-        setAddress("");
+        setAccountNumber("");
         setEnabled(true);
       }
       setErrorMessage("");
     }
-  }, [isOpen, delivery]);
+  }, [isOpen, payment]);
 
   const createMutation = useMutation({
-    mutationFn: createDelivery,
+    mutationFn: createPayment,
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ["deliveries"] });
+      await queryClient.invalidateQueries({ queryKey: ["payments"] });
       onClose();
     },
     onError: (mutationError) => {
       setErrorMessage(
         mutationError instanceof Error
           ? mutationError.message
-          : "Failed to create delivery.",
+          : "Failed to create payment.",
       );
     },
   });
 
   const updateMutation = useMutation({
     mutationFn: ({ id, updates }: { id: string; updates: any }) =>
-      updateDelivery(id, updates),
+      updatePayment(id, updates),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ["deliveries"] });
+      await queryClient.invalidateQueries({ queryKey: ["payments"] });
       onClose();
     },
     onError: (mutationError) => {
       setErrorMessage(
         mutationError instanceof Error
           ? mutationError.message
-          : "Failed to update delivery.",
+          : "Failed to update payment.",
       );
     },
   });
@@ -85,28 +78,22 @@ export function DeliveryModal({
       setErrorMessage("Name is required.");
       return;
     }
-    if (!phone.trim()) {
-      setErrorMessage("Phone is required.");
-      return;
-    }
 
     setErrorMessage("");
 
-    if (isEdit && delivery) {
+    if (isEdit && payment) {
       updateMutation.mutate({
-        id: delivery.id,
+        id: payment.id,
         updates: {
           name: name.trim(),
-          phone: phone.trim(),
-          address: address.trim() || null,
+          account_number: accountNumber.trim() || null,
           enabled,
         },
       });
     } else {
       createMutation.mutate({
         name: name.trim(),
-        phone: phone.trim(),
-        address: address.trim() || undefined,
+        account_number: accountNumber.trim() || null,
         enabled,
       });
     }
@@ -118,13 +105,13 @@ export function DeliveryModal({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title={isEdit ? "Edit Delivery" : "Create Delivery"}
+      title={isEdit ? "Edit Payment Method" : "Create Payment Method"}
       maxWidthClass="max-w-md"
       headerContent={
         <p className="mt-1 text-sm text-slate-500">
           {isEdit
-            ? "Update delivery information."
-            : "Add a new delivery option."}
+            ? "Update payment method information."
+            : "Add a new payment method option."}
         </p>
       }
     >
@@ -136,29 +123,19 @@ export function DeliveryModal({
               type="text"
               value={name}
               onChange={(event) => setName(event.target.value)}
-              placeholder="Enter delivery name"
+              placeholder="Enter method name"
               className={inputClass}
+              required
             />
           </div>
 
           <div>
-            <label className={fieldLabelClass}>Phone</label>
-            <input
-              type="tel"
-              value={phone}
-              onChange={(event) => setPhone(event.target.value)}
-              placeholder="Enter phone number"
-              className={inputClass}
-            />
-          </div>
-
-          <div>
-            <label className={fieldLabelClass}>Address</label>
+            <label className={fieldLabelClass}>Account No.</label>
             <textarea
               rows={3}
-              value={address}
-              onChange={(event) => setAddress(event.target.value)}
-              placeholder="Enter delivery address (optional)"
+              value={accountNumber}
+              onChange={(event) => setAccountNumber(event.target.value)}
+              placeholder="Enter account No."
               className={inputClass}
             />
           </div>
@@ -206,8 +183,8 @@ export function DeliveryModal({
           {isPending
             ? "Saving..."
             : isEdit
-              ? "Update Delivery"
-              : "Create Delivery"}
+              ? "Update Payment"
+              : "Create Payment"}
         </button>
       </div>
       {errorMessage && (

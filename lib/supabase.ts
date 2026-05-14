@@ -24,11 +24,13 @@ export type Order = {
   id: string;
   customer_id: string;
   delivery_id: string;
+  payment_id: string;
   status: "pending" | "delivery" | "completed" | "canceled";
   total_price: number;
   created_at: string;
   customer?: Customer; // populated when joined
   delivery?: Delivery; // populated when joined
+  payment?: Payment; // populated when joined
   order_items?: OrderItem[]; // populated when joined
 };
 
@@ -59,6 +61,14 @@ export type Delivery = {
   name: string;
   phone: string;
   address?: string;
+  enabled: boolean;
+  created_at: string;
+};
+
+export type Payment = {
+  id: string;
+  name: string;
+  account_number: string | null;
   enabled: boolean;
   created_at: string;
 };

@@ -37,7 +37,7 @@ export const MobileDataTable = <T,>({
       <div
         className={cn(
           "min-h-[200px] transition-opacity",
-          isFetching ? "opacity-50" : "opacity-100",
+          // isFetching ? "opacity-50" : "opacity-100",
         )}
       >
         {data.length === 0 ? (

@@ -16,7 +16,7 @@ type ViewOrderModalProps = {
 };
 
 function formatCurrency(value: number) {
-  return `$${value.toFixed(2)}`;
+  return `${value.toFixed(2)}`;
 }
 
 function getStatusClass(status: OrderStatus) {
@@ -109,17 +109,21 @@ export function ViewOrderModal({
         <div className="grid gap-6 lg:grid-cols-3">
           <div className="space-y-5 lg:col-span-2">
             <div className="overflow-hidden rounded-xl border border-slate-200">
-              <div className="grid grid-cols-[1.5fr,0.6fr,0.7fr] border-b border-slate-200 bg-slate-50 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">
-                <span>Product</span>
-                <span>Qty</span>
-                <span className="text-right">Price</span>
+              {/* Header */}
+              <div className="grid grid-cols-4 items-center gap-4 border-b border-slate-200 bg-slate-50 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                <div className="col-span-2">Product</div>
+                <div className="text-center">Qty</div>
+                <div className="text-right">Price (MMK)</div>
               </div>
+
+              {/* Body */}
               <div className="divide-y divide-slate-100">
                 {isLoading && (
                   <div className="px-4 py-8 text-sm text-slate-500">
                     Loading order items...
                   </div>
                 )}
+
                 {isError && (
                   <div className="px-4 py-8 text-sm text-rose-500">
                     {error instanceof Error
@@ -127,28 +131,34 @@ export function ViewOrderModal({
                       : "Failed to load order details."}
                   </div>
                 )}
+
                 {data?.items.map((item) => (
                   <div
                     key={item.id}
-                    className="grid grid-cols-[1.5fr,0.6fr,0.7fr] items-center px-4 py-4"
+                    className="grid grid-cols-4 items-center gap-4 px-4 py-4"
                   >
-                    <div className="flex items-center gap-3">
-                      <div className="h-12 w-12 rounded-lg bg-slate-200" />
-                      <div>
-                        <p className="text-sm font-medium text-slate-900">
+                    {/* Product Column */}
+                    <div className="col-span-2 flex items-center gap-3">
+                      <div className="h-12 w-12 shrink-0 rounded-lg bg-slate-200" />
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-medium text-slate-900">
                           {item.name}
                         </p>
-                        <p className="text-xs text-slate-500">
-                          {item.source || "Manual item"}
+                        <p className="truncate text-xs text-slate-500">
+                          {item.price}
                         </p>
                       </div>
                     </div>
-                    <span className="text-sm text-slate-600">
+
+                    {/* Quantity Column */}
+                    <div className="text-center text-sm text-slate-600">
                       {item.quantity}
-                    </span>
-                    <span className="text-right text-sm font-medium text-slate-900">
+                    </div>
+
+                    {/* Price Column */}
+                    <div className="text-right text-sm font-medium text-slate-900">
                       {formatCurrency(item.price * item.quantity)}
-                    </span>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -163,7 +173,7 @@ export function ViewOrderModal({
               </div>
               <div className="mt-2 flex items-center justify-between text-sm">
                 <span className="text-slate-500">Shipping</span>
-                <span className="font-medium text-slate-900">$0.00</span>
+                <span className="font-medium text-slate-900">0.00</span>
               </div>
               <div className="mt-4 flex items-center justify-between border-t border-slate-200 pt-4">
                 <span className="text-sm font-semibold text-slate-900">

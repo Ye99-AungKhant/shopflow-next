@@ -24,7 +24,7 @@ import { span } from "motion/react-client";
 import Image from "next/image";
 
 function formatCurrency(value: number) {
-  return `$${value.toFixed(2)}`;
+  return `${value.toFixed(2)}`;
 }
 
 export function Dashboard({ refreshTrigger }: { refreshTrigger: number }) {

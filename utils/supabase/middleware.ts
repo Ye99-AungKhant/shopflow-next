@@ -37,8 +37,8 @@ export async function updateSession(request: NextRequest) {
   // Set user id and name as cookies for frontend access
   if (user) {
     supabaseResponse.cookies.set("user_id", user.id);
-    if (user.user_metadata?.name) {
-      supabaseResponse.cookies.set("user_name", user.user_metadata.name);
+    if (user.user_metadata?.full_name) {
+      supabaseResponse.cookies.set("full_name", user.user_metadata.full_name);
     }
   }
 
