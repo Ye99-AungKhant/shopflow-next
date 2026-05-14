@@ -195,15 +195,15 @@ export function OrderList({ refreshTrigger }: { refreshTrigger: number }) {
           {openMenuId === order.id && (
             <div
               className={cn(
-                "absolute right-0 z-10 w-48 rounded-lg border border-slate-100 bg-white shadow-lg z-50",
+                "absolute right-0 z-10 w-48 rounded-lg border border-slate-100 bg-white shadow-lg",
                 isMenuFlipped ? "bottom-full mb-2" : "top-full mt-2",
               )}
             >
               {/* Group 1: View & Print */}
               <div className="border-b border-slate-100 py-1">
                 <button
-                  onClick={(e) => {
-                    e.stopPropagation();
+                  onMouseDown={(e) => {
+                    e.preventDefault();
                     openModal("view", order);
                   }}
                   className="flex w-full items-center gap-3 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
@@ -220,8 +220,8 @@ export function OrderList({ refreshTrigger }: { refreshTrigger: number }) {
               {/* Group 2: Edit & Update Status */}
               <div className="border-b border-slate-100 py-1">
                 <button
-                  onClick={(e) => {
-                    e.stopPropagation();
+                  onMouseDown={(e) => {
+                    e.preventDefault();
                     openModal("edit", order);
                   }}
                   className="flex w-full items-center gap-3 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
@@ -230,8 +230,8 @@ export function OrderList({ refreshTrigger }: { refreshTrigger: number }) {
                   <span>Edit Order</span>
                 </button>
                 <button
-                  onClick={(e) => {
-                    e.stopPropagation();
+                  onMouseDown={(e) => {
+                    e.preventDefault();
                     openModal("update-status", order);
                   }}
                   className="flex w-full items-center gap-3 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
@@ -244,8 +244,8 @@ export function OrderList({ refreshTrigger }: { refreshTrigger: number }) {
               {/* Group 3: Cancel & Delete (Danger Actions) */}
               <div className="py-1">
                 <button
-                  onClick={(e) => {
-                    e.stopPropagation();
+                  onMouseDown={(e) => {
+                    e.preventDefault();
                     openModal("update-status", order, "canceled");
                   }}
                   className="flex w-full items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50"
@@ -254,8 +254,8 @@ export function OrderList({ refreshTrigger }: { refreshTrigger: number }) {
                   <span>Cancel Order</span>
                 </button>
                 <button
-                  onClick={(e) => {
-                    e.stopPropagation();
+                  onMouseDown={(e) => {
+                    e.preventDefault();
                     openModal("delete", order);
                   }}
                   className="flex w-full items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50"

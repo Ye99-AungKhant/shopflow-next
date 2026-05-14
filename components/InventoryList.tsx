@@ -312,7 +312,7 @@ export function InventoryList() {
         <div className="flex items-center gap-3">
           {row.photo_url ? (
             <Image
-              src={row.photo_url ?? "/placeholder.png"}
+              src={row.photo_url}
               alt={row.name}
               width={40}
               height={40}
@@ -388,8 +388,8 @@ export function InventoryList() {
             >
               <button
                 type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
+                onMouseDown={(e) => {
+                  e.preventDefault();
                   setActiveMenuRow(null);
                   setActiveRow(row);
                   setIsAdjustStockOpen(true);
@@ -402,8 +402,8 @@ export function InventoryList() {
               <div className="border-b border-slate-100" />
               <button
                 type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
+                onMouseDown={(e) => {
+                  e.preventDefault();
                   setActiveMenuRow(null);
                   setActiveRow(row);
                   setIsEditItemOpen(true);
@@ -416,8 +416,8 @@ export function InventoryList() {
               <div className="border-b border-slate-100" />
               <button
                 type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
+                onMouseDown={(e) => {
+                  e.preventDefault();
                   setActiveMenuRow(null);
                   setActiveRow(row);
                   setIsDeleteItemOpen(true);
