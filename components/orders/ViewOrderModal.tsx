@@ -1,13 +1,14 @@
 "use client";
 import { useQuery } from "@tanstack/react-query";
 import { type ReactNode } from "react";
-import { CreditCard, MapPin, User } from "lucide-react";
+import { CreditCard, MapPin, Package, User } from "lucide-react";
 import { Modal } from "../ui/Modal";
 import {
   fetchOrderDetails,
   type OrderListRow,
   type OrderStatus,
 } from "../../lib/orders";
+import Image from "next/image";
 
 type ViewOrderModalProps = {
   isOpen: boolean;
@@ -139,13 +140,26 @@ export function ViewOrderModal({
                   >
                     {/* Product Column */}
                     <div className="col-span-2 flex items-center gap-3">
-                      <div className="h-12 w-12 shrink-0 rounded-lg bg-slate-200" />
+                      {/* <div className="h-12 w-12 shrink-0 rounded-lg bg-slate-200" /> */}
+                      {item?.inventory?.photo_url ? (
+                        <Image
+                          src={item.inventory?.photo_url}
+                          width={100}
+                          height={100}
+                          alt={item.name}
+                          className="rounded-sm object-cover"
+                        />
+                      ) : (
+                        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-200 text-slate-500">
+                          <Package className="h-5 w-5" />
+                        </div>
+                      )}
                       <div className="min-w-0">
                         <p className="truncate text-sm font-medium text-slate-900">
                           {item.name}
                         </p>
                         <p className="truncate text-xs text-slate-500">
-                          {item.price}
+                          {item.price} MMK
                         </p>
                       </div>
                     </div>

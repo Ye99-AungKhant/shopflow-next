@@ -40,21 +40,21 @@ export function Dashboard({ refreshTrigger }: { refreshTrigger: number }) {
       value: formatCurrency(data?.totalCost ?? 0),
       trend: data?.trends.revenue.label ?? "0% vs last week",
       trendDirection: data?.trends.revenue.direction ?? "flat",
-      icon: DollarSign,
+      icon: "MMK",
     },
     {
       label: "Total Revenue",
       value: formatCurrency(data?.totalRevenue ?? 0),
       trend: data?.trends.revenue.label ?? "0% vs last week",
       trendDirection: data?.trends.revenue.direction ?? "flat",
-      icon: DollarSign,
+      icon: "MMK",
     },
     {
       label: "Total Profit",
       value: formatCurrency(data?.totalProfit ?? 0),
       trend: data?.trends.revenue.label ?? "0% vs last week",
       trendDirection: data?.trends.revenue.direction ?? "flat",
-      icon: DollarSign,
+      icon: "MMK",
     },
     {
       label: "Orders",
@@ -115,7 +115,13 @@ export function Dashboard({ refreshTrigger }: { refreshTrigger: number }) {
                   </p>
                 </div>
                 <div className="flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600 shrink-0">
-                  <Icon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                  {typeof Icon === "string" ? (
+                    <span className="text-[8px] sm:text-[10px] font-semibold">
+                      {Icon}
+                    </span>
+                  ) : (
+                    <Icon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                  )}
                 </div>
               </div>
 
@@ -187,7 +193,8 @@ export function Dashboard({ refreshTrigger }: { refreshTrigger: number }) {
                   </p>
                 </div>
                 <div className="rounded-2xl bg-indigo-50 px-3 py-2 text-sm font-semibold text-indigo-700">
-                  {formatCurrency(data.totalRevenue)} total
+                  {formatCurrency(data.totalRevenue)}{" "}
+                  <span className="text-xs">MMK</span> total
                 </div>
               </div>
 
@@ -266,13 +273,16 @@ export function Dashboard({ refreshTrigger }: { refreshTrigger: number }) {
             </div>
 
             <div className="rounded-3xl bg-white p-6 shadow-[0_20px_60px_-35px_rgba(15,23,42,0.25)]">
-              <div className="mb-6">
-                <h2 className="text-lg font-semibold text-slate-900">
-                  Top Customers
-                </h2>
-                <p className="mt-1 text-sm text-slate-500">
-                  Highest lifetime value customers from your order history.
-                </p>
+              <div className="flex flex-row justify-between mb-6">
+                <div>
+                  <h2 className="text-lg font-semibold text-slate-900">
+                    Top Customers
+                  </h2>
+                  <p className="mt-1 text-sm text-slate-500">
+                    Highest lifetime value customers from your order history.
+                  </p>
+                </div>
+                <p className="text-nowrap">LTV (MMK)</p>
               </div>
 
               <div className="space-y-4">
@@ -312,13 +322,16 @@ export function Dashboard({ refreshTrigger }: { refreshTrigger: number }) {
           </section>
 
           <section className="rounded-3xl bg-white p-6 shadow-[0_20px_60px_-35px_rgba(15,23,42,0.25)]">
-            <div className="mb-6">
-              <h2 className="text-lg font-semibold text-slate-900">
-                Popular Products
-              </h2>
-              <p className="mt-1 text-sm text-slate-500">
-                Best-performing items by units sold and revenue generated.
-              </p>
+            <div className="flex flex-row justify-between mb-6">
+              <div>
+                <h2 className="text-lg font-semibold text-slate-900">
+                  Popular Products
+                </h2>
+                <p className="mt-1 text-sm text-slate-500">
+                  Best-performing items by units sold and revenue generated.
+                </p>
+              </div>
+              <p className="text-nowrap">LTV (MMK)</p>
             </div>
 
             <div className="space-y-4">
@@ -329,7 +342,7 @@ export function Dashboard({ refreshTrigger }: { refreshTrigger: number }) {
               {data.popularProducts.map((product) => (
                 <div
                   key={product.name}
-                  className="flex flex-col gap-4 rounded-2xl bg-slate-50/80 px-4 py-4 sm:flex-row sm:items-center sm:justify-between"
+                  className="flex flex-row items-center justify-between gap-4 rounded-2xl bg-slate-50/80 px-4 py-4"
                 >
                   <div className="flex items-center gap-4">
                     {product.photo_url ? (

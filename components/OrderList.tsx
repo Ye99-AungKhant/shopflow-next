@@ -157,7 +157,7 @@ export function OrderList({ refreshTrigger }: { refreshTrigger: number }) {
       cellClassName: "text-sm text-slate-600",
     },
     {
-      header: "Total",
+      header: "Total (MMK)",
       accessorKey: "total",
       headerClassName: "text-right",
       cellClassName: "text-right text-sm font-semibold text-slate-900",
@@ -317,7 +317,12 @@ export function OrderList({ refreshTrigger }: { refreshTrigger: number }) {
 
         <div className="text-right">
           <div className="text-xs text-slate-600 uppercase">{order.items}</div>
-          <div className="text-sm font-bold text-slate-900">{order.total}</div>
+          <div>
+            <span className="text-sm font-bold text-slate-900">
+              {order.total}
+            </span>
+            <span className="text-xs text-slate-600"> MMK</span>
+          </div>
         </div>
       </div>
 

@@ -1,13 +1,15 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Plus, Trash2 } from "lucide-react";
+import { Package, Plus, Trash2 } from "lucide-react";
 import { Modal } from "../ui/Modal";
 import {
   fetchOrderDetails,
   updateOrder,
   type OrderListRow,
 } from "../../lib/orders";
+import { InventoryItem } from "@/lib/supabase";
+import Image from "next/image";
 
 type EditOrderModalProps = {
   isOpen: boolean;
@@ -22,6 +24,7 @@ type EditableItem = {
   unitPrice: number;
   quantity: number;
   source: string | null;
+  inventory?: InventoryItem;
 };
 
 const fieldLabelClass =
@@ -30,7 +33,7 @@ const inputClass =
   "w-full rounded-lg border border-slate-200 p-2.5 text-sm text-slate-900 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500";
 
 function formatCurrency(value: number) {
-  return `$${value.toFixed(2)}`;
+  return `${value.toFixed(2)}`;
 }
 
 export function EditOrderModal({
@@ -71,6 +74,7 @@ export function EditOrderModal({
         unitPrice: item.price,
         quantity: item.quantity,
         source: item.source,
+        inventory: item?.inventory,
       })),
     );
     setErrorMessage("");
@@ -191,7 +195,7 @@ export function EditOrderModal({
                 </div>
               </div>
 
-              <div>
+              {/* <div>
                 <label className={fieldLabelClass}>Email Address</label>
                 <input
                   type="email"
@@ -203,7 +207,7 @@ export function EditOrderModal({
                 <p className="mt-1 text-xs text-slate-400">
                   Email is not stored in the current database schema.
                 </p>
-              </div>
+              </div> */}
 
               <div>
                 <label className={fieldLabelClass}>Phone Number</label>
@@ -235,7 +239,19 @@ export function EditOrderModal({
                     className="mb-3 flex items-center justify-between rounded-lg bg-slate-50 p-3"
                   >
                     <div className="flex items-center gap-3">
-                      <div className="h-11 w-11 rounded-md bg-slate-200" />
+                      {item?.inventory?.photo_url ? (
+                        <Image
+                          src={item.inventory?.photo_url}
+                          width={100}
+                          height={100}
+                          alt={item.name}
+                          className="rounded-sm object-cover"
+                        />
+                      ) : (
+                        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-200 text-slate-500">
+                          <Package className="h-5 w-5" />
+                        </div>
+                      )}
                       <div>
                         <input
                           value={item.name}
@@ -314,9 +330,14 @@ export function EditOrderModal({
                 <span className="text-sm font-medium text-slate-600">
                   Order Total
                 </span>
-                <span className="text-base font-semibold text-slate-900">
-                  {formatCurrency(total)}
-                </span>
+                <div className="flex flex-row">
+                  <span className="text-base font-semibold text-slate-900">
+                    {formatCurrency(total)}
+                  </span>
+                  <div>
+                    <span className="text-xs text-slate-600 ml-1">MMK</span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

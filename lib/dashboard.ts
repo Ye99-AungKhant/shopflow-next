@@ -77,7 +77,7 @@ const customerColors = [
 ];
 
 function formatCurrency(value: number) {
-  return `$${value.toFixed(2)}`;
+  return `${value.toFixed(2)}`;
 }
 
 function buildTrend(current: number, previous: number): DashboardTrend {

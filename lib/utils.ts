@@ -8,6 +8,7 @@ import {
   useState,
 } from "react";
 import { OrderStatus } from "./orders";
+import { supabase } from "./supabase";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -98,3 +99,58 @@ export function getCookie(name: string) {
 export function cleanString(text: string | undefined) {
   if (text) return decodeURIComponent(text).trim();
 }
+
+// export const removeOldFile = async (fileUrl: string) => {
+//   if (fileUrl) {
+//     const oldFilePath = fileUrl.split(
+//       "/storage/v1/object/public/product-images/",
+//     )[1];
+
+//     if (oldFilePath) {
+//       return await supabase.storage
+//         .from("product-images")
+//         .remove([oldFilePath]);
+//     }
+//   }
+//   return;
+// };
+
+export const removeOldFile = async (fileUrl: string, inventoryId?: string) => {
+  try {
+    // Remove file from storage
+    if (fileUrl) {
+      const oldFilePath = fileUrl.split(
+        "/storage/v1/object/public/product-images/",
+      )[1];
+
+      if (oldFilePath) {
+        const { error: storageError } = await supabase.storage
+          .from("product-images")
+          .remove([oldFilePath]);
+
+        if (storageError) {
+          throw storageError;
+        }
+      }
+    }
+
+    // Remove photo_url from inventory table
+    if (inventoryId) {
+      const { error: dbError } = await supabase
+        .from("inventory")
+        .update({
+          photo_url: null,
+        })
+        .eq("id", inventoryId);
+
+      if (dbError) {
+        throw dbError;
+      }
+    }
+
+    return true;
+  } catch (error) {
+    console.error("Remove old file error:", error);
+    return false;
+  }
+};

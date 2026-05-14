@@ -163,9 +163,18 @@ export function InventoryList() {
         throw new Error("Supabase is not configured");
       }
 
+      const updateData = {
+        ...payload.data,
+      };
+
+      // Remove photo_url if falsy
+      if (!updateData.photo_url) {
+        delete updateData.photo_url;
+      }
+
       const { data, error } = await supabase
         .from("inventory")
-        .update(payload.data)
+        .update(updateData)
         .eq("id", payload.id)
         .select()
         .single();
@@ -337,19 +346,19 @@ export function InventoryList() {
       cellClassName: "text-sm text-slate-600",
     },
     {
-      header: "Cost",
+      header: "Cost (MMK)",
       cell: (row) => (
         <span className="font-medium text-slate-900">
-          ${row.cost?.toFixed(2) ?? "0.00"}
+          {row.cost?.toFixed(2) ?? "0.00"}
         </span>
       ),
       cellClassName: "text-sm",
     },
     {
-      header: "Price",
+      header: "Price (MMK)",
       cell: (row) => (
         <span className="font-medium text-slate-900">
-          ${row.price.toFixed(2)}
+          {row.price.toFixed(2)}
         </span>
       ),
       cellClassName: "text-sm",
@@ -438,10 +447,10 @@ export function InventoryList() {
     <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
       <div className="flex items-center justify-between mb-3 gap-3">
         <div className="flex items-center gap-3 min-w-0">
-          <input
+          {/* <input
             type="checkbox"
             className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
-          />
+          /> */}
           <div className="min-w-0">
             <p className="truncate text-sm font-semibold text-slate-900">
               {item.name}
@@ -451,24 +460,36 @@ export function InventoryList() {
             </p>
           </div>
         </div>
-        <div className="text-right">
-          <p className="text-sm font-semibold text-slate-900">
-            ${item.price.toFixed(2)}
-          </p>
-          <p className="text-xs text-slate-500">Cost ${item.cost.toFixed(2)}</p>
+        <div className="flex flex-row">
+          <div>
+            <p className="text-sm font-semibold text-slate-900">
+              {item.price.toFixed(2)}
+            </p>
+            <p className="text-xs text-slate-500">
+              Cost {item.cost.toFixed(2)}
+            </p>
+          </div>
+          <p>MMK</p>
         </div>
       </div>
 
       <div className="flex items-center gap-3 mb-3">
-        <Image
-          src={item.photo_url ?? "/placeholder.png"}
-          alt={item.name}
-          width={44}
-          height={44}
-          className="h-11 w-11 rounded-xl object-cover"
-        />
+        {item?.photo_url ? (
+          <Image
+            src={item.photo_url}
+            alt={item.name}
+            width={44}
+            height={44}
+            className="h-11 w-11 rounded-xl object-cover"
+          />
+        ) : (
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-200 text-slate-500">
+            <Package className="h-5 w-5" />
+          </div>
+        )}
+
         <div className="min-w-0">
-          <p className="text-sm font-medium text-slate-900">{item.category}</p>
+          {/* <p className="text-sm font-medium text-slate-900">{item.category}</p> */}
           <p className="text-xs text-slate-500">
             {item.stock_quantity} in stock
           </p>
@@ -618,18 +639,22 @@ export function InventoryList() {
         initialData={
           activeRow
             ? {
+                id: activeRow.id,
                 name: activeRow.name,
                 sku: activeRow.sku ?? "",
                 price: activeRow.price,
                 cost: activeRow.cost ?? 0,
                 stock_quantity: activeRow.stock_quantity,
+                photo_url: activeRow.photo_url,
               }
             : {
+                id: "",
                 name: "",
                 sku: "",
                 price: 0,
                 cost: 0,
                 stock_quantity: 0,
+                photo_url: "",
               }
         }
         onSave={(product) =>

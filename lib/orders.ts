@@ -1,6 +1,7 @@
 import { format } from "date-fns";
 import {
   Delivery,
+  InventoryItem,
   isSupabaseConfigured,
   supabase,
   type Customer,
@@ -51,6 +52,7 @@ export type OrderDetailItem = {
   quantity: number;
   price: number;
   source: string | null;
+  inventory?: InventoryItem;
 };
 
 export type OrderDetails = {
@@ -94,7 +96,7 @@ const avatarClasses = [
 ];
 
 function formatCurrency(value: number) {
-  return `$${value.toFixed(2)}`;
+  return `${value.toFixed(2)}`;
 }
 
 function getInitials(name: string) {
@@ -260,7 +262,14 @@ export async function fetchOrderDetails(
         created_at,
         customer:customers(id, name, phone, address, created_at),
         delivery:delivery(id, name, phone, address, created_at, enabled),
-        order_items(id, order_id, inventory_id, name, quantity, price, source, created_at)
+        order_items(id, order_id, inventory_id, name, quantity, price, source, created_at, inventory:inventory(
+        id,
+        name,
+        sku,
+        price,
+        photo_url,
+        stock_quantity
+      ))
       `,
     )
     .eq("id", orderId)
@@ -294,6 +303,7 @@ export async function fetchOrderDetails(
       quantity: Number(item.quantity ?? 0),
       price: Number(item.price ?? 0),
       source: item.source ?? null,
+      inventory: item.inventory,
     })),
   };
 }

@@ -54,6 +54,7 @@ export type OrderItem = {
   price: number;
   source: string;
   created_at: string;
+  inventory?: InventoryItem;
 };
 
 export type Delivery = {

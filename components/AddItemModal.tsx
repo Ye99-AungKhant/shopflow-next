@@ -3,6 +3,7 @@ import { FormEvent, useRef, useState } from "react";
 import { ImagePlus, Plus } from "lucide-react";
 import { Modal } from "./ui/Modal";
 import { supabase } from "../lib/supabase";
+import Image from "next/image";
 
 type AddItemModalProps = {
   isOpen: boolean;
@@ -89,10 +90,12 @@ export function AddItemModal({
           onDrop={(event) => event.preventDefault()}
         >
           {file ? (
-            <img
+            <Image
               src={URL.createObjectURL(file)}
               alt="Preview"
-              className="h-20 w-20 rounded-xl object-cover"
+              width={100}
+              height={100}
+              className="rounded-xl object-cover"
             />
           ) : (
             <ImagePlus className="h-9 w-9 text-slate-400 transition group-hover:text-indigo-500" />
@@ -130,53 +133,43 @@ export function AddItemModal({
 
           <label className="block">
             <span className="mb-1 block text-xs font-semibold uppercase tracking-wider text-slate-500">
-              SKU
+              Code
             </span>
             <input
               type="text"
               value={sku}
               onChange={(event) => setSku(event.target.value)}
-              placeholder="e.g., TECH-001"
+              placeholder="e.g., T-001"
               className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none transition-all duration-150 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
             />
           </label>
 
           <label className="block">
             <span className="mb-1 block text-xs font-semibold uppercase tracking-wider text-slate-500">
-              Price
+              Price (MMK)
             </span>
-            <div className="relative">
-              <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-slate-500">
-                $
-              </span>
-              <input
-                type="number"
-                step="0.01"
-                value={price}
-                onChange={(event) => setPrice(event.target.value)}
-                placeholder="0.00"
-                className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 pl-10 text-sm text-slate-900 outline-none transition-all duration-150 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
-              />
-            </div>
+            <input
+              type="number"
+              step="0.01"
+              value={price}
+              onChange={(event) => setPrice(event.target.value)}
+              placeholder="0.00"
+              className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none transition-all duration-150 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
+            />
           </label>
 
           <label className="block">
             <span className="mb-1 block text-xs font-semibold uppercase tracking-wider text-slate-500">
-              Cost
+              Cost (MMK)
             </span>
-            <div className="relative">
-              <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-slate-500">
-                $
-              </span>
-              <input
-                type="number"
-                step="0.01"
-                value={cost}
-                onChange={(event) => setCost(event.target.value)}
-                placeholder="0.00"
-                className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 pl-10 text-sm text-slate-900 outline-none transition-all duration-150 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
-              />
-            </div>
+            <input
+              type="number"
+              step="0.01"
+              value={cost}
+              onChange={(event) => setCost(event.target.value)}
+              placeholder="0.00"
+              className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none transition-all duration-150 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
+            />
           </label>
 
           <label className="block">
@@ -206,8 +199,8 @@ export function AddItemModal({
             disabled={isSubmitting || uploading}
             className="inline-flex items-center justify-center rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-70"
           >
-            <Plus className="mr-2 h-4 w-4" />
-            {uploading ? "Uploading..." : "Add Product"}
+            {/* <Plus className="mr-2 h-4 w-4" /> */}
+            {uploading ? "Uploading..." : "Save"}
           </button>
         </div>
       </form>
