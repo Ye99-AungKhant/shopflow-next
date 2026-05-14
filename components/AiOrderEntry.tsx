@@ -174,7 +174,7 @@ export function AiOrderEntry({ onOrderAdded }: { onOrderAdded: () => void }) {
         const { data: existingDelivery, error: dSearchError } = await supabase
           .from("delivery")
           .select("id")
-          .ilike("name", `%${orderInfo.delivery.name}%`)
+          .ilike("name", `%${orderInfo?.delivery?.name}%`)
           .limit(1)
           .maybeSingle();
 
@@ -280,6 +280,8 @@ export function AiOrderEntry({ onOrderAdded }: { onOrderAdded: () => void }) {
       }
     } catch (error: any) {
       const msg = error?.message || String(error);
+      console.log(msg);
+
       setMessages((prev) => [
         ...prev,
         {
