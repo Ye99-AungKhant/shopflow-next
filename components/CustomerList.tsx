@@ -312,8 +312,8 @@ export function CustomerList() {
       />
 
       <div className="flex flex-row justify-between">
-        <label className="flex h-11 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-600 shadow-sm">
-          <span>Rows</span>
+        <label className="flex h-8 items-center gap-2 rounded-xl border border-slate-200 bg-white px-1 text-sm text-slate-600 shadow-sm">
+          <span>Show</span>
           <select
             value={pageSize}
             onChange={(e) =>
@@ -335,7 +335,7 @@ export function CustomerList() {
           type="button"
           onClick={openCreate}
           disabled={!isSupabaseConfigured || saveMutation.isPending}
-          className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60"
+          className="inline-flex h-8 items-center justify-center gap-2 rounded-xl bg-indigo-600 px-2 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60"
         >
           <Plus className="h-4 w-4 shrink-0" />
           New

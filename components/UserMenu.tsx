@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useTransition } from "react";
-import { Loader2, LogOut } from "lucide-react";
+import { Loader2, LogOut, User } from "lucide-react";
 import { cleanString, getCookie } from "@/lib/utils";
 
 export default function UserMenu({ logout }: { logout: () => void }) {
@@ -34,7 +34,8 @@ export default function UserMenu({ logout }: { logout: () => void }) {
         className="flex cursor-pointer items-center gap-3 rounded-full bg-white p-1 shadow-sm ring-1 ring-slate-200/70 transition-colors hover:bg-slate-50 sm:cursor-default sm:rounded-2xl sm:px-3 sm:py-1 sm:hover:bg-white"
       >
         <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-violet-500 text-sm font-semibold text-white shadow-inner">
-          {cleanString(userName) || "Admin"}
+          {/* {cleanString(userName) || "Admin"} */}
+          <User />
         </div>
 
         <div className="hidden text-left sm:block">

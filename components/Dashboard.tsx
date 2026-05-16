@@ -24,7 +24,10 @@ import { span } from "motion/react-client";
 import Image from "next/image";
 
 function formatCurrency(value: number) {
-  return `${value.toFixed(2)}`;
+  return value.toLocaleString(undefined, {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
 }
 
 export function Dashboard() {
@@ -126,7 +129,7 @@ export function Dashboard() {
               </div>
 
               <div className="mt-4 sm:mt-6">
-                <p className="text-2xl sm:text-4xl font-bold tracking-tight text-slate-900 truncate">
+                <p className="text-xl sm:text-2xl font-bold text-slate-900">
                   {card.value}
                   <span className="ml-1 sm:ml-2 text-sm sm:text-lg font-medium text-slate-400">
                     {isInventory ? "Products" : ""}

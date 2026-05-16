@@ -453,7 +453,7 @@ export function OrderList() {
 
       <div className="flex flex-row justify-between gap-2">
         <div className="flex gap-2">
-          <div className="flex h-11 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-600 shadow-sm">
+          <div className="flex h-8 items-center gap-2 rounded-xl border border-slate-200 bg-white px-1 text-sm text-slate-600 shadow-sm">
             <select
               value={activeTab}
               onChange={(e) => setActiveTab(e.target.value)}
@@ -466,8 +466,8 @@ export function OrderList() {
               ))}
             </select>
           </div>
-          <label className="flex h-11 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-600 shadow-sm">
-            <span>Rows</span>
+          <label className="flex h-8 items-center gap-2 rounded-xl border border-slate-200 bg-white px-1 text-sm text-slate-600 shadow-sm">
+            <span>Show</span>
             <select
               value={pageSize}
               onChange={(event) =>
@@ -488,7 +488,7 @@ export function OrderList() {
           </label>
         </div>
         <div>
-          <button className="inline-flex h-11 items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50">
+          <button className="inline-flex h-8 items-center gap-2 rounded-xl border border-slate-200 bg-white px-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50">
             <Download className="h-4 w-4" />
             Export CSV
           </button>
