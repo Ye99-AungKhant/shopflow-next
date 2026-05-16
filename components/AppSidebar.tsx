@@ -6,6 +6,7 @@ import { Settings, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { isSupabaseConfigured } from "@/lib/supabase";
 import Image from "next/image";
+import BottomNav from "./BottomNav";
 
 type NavItem = {
   id: string;
@@ -15,19 +16,18 @@ type NavItem = {
   hideOnDesktopNav?: boolean;
 };
 
-interface AppSidebarProps {
+export interface AppSidebarProps {
   navItems: NavItem[];
   pathname: string;
 }
 
-function navLinkActive(pathname: string, href: string) {
+export function navLinkActive(pathname: string, href: string) {
   if (href === "/") return pathname === "/";
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
 export function AppSidebar({ navItems, pathname }: AppSidebarProps) {
-  const aiHref =
-    navItems.find((item) => item.id === "ai")?.href ?? "/ai";
+  const aiHref = navItems.find((item) => item.id === "ai")?.href ?? "/ai";
   const aiActive = navLinkActive(pathname, aiHref);
 
   return (
@@ -36,7 +36,7 @@ export function AppSidebar({ navItems, pathname }: AppSidebarProps) {
         <div className="flex items-center gap-3 px-3">
           <Image
             src="/logo.png"
-            alt="ShopFlow Logo"
+            alt="ShopFlow"
             width={50}
             height={50}
             className="rounded-sm object-cover"
@@ -105,7 +105,7 @@ export function AppSidebar({ navItems, pathname }: AppSidebarProps) {
         </div>
       </aside>
 
-      <div className="fixed bottom-0 left-0 right-0 z-40 flex items-center justify-around border-t border-slate-200/70 bg-white/90 px-2 py-2 backdrop-blur-xl md:hidden">
+      {/* <div className="fixed bottom-0 left-0 right-0 z-40 flex items-center justify-around border-t border-slate-200/70 bg-white/90 px-2 py-2 backdrop-blur-xl md:hidden">
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = navLinkActive(pathname, item.href);
@@ -124,7 +124,9 @@ export function AppSidebar({ navItems, pathname }: AppSidebarProps) {
             </Link>
           );
         })}
-      </div>
+      </div> */}
+
+      <BottomNav navItems={navItems} pathname={pathname} />
     </>
   );
 }

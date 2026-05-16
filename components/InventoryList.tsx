@@ -675,22 +675,22 @@ export function InventoryList() {
         isDeleting={deleteItemMutation.isPending}
       />
 
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-        <div className="flex h-11 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-600 shadow-sm">
-          <select
-            value={activeTab}
-            onChange={(e) => setActiveTab(e.target.value)}
-            className="bg-transparent font-medium text-slate-900 outline-none"
-          >
-            {tabs.map((tab) => (
-              <option key={tab} value={tab}>
-                {tab}
-              </option>
-            ))}
-          </select>
-        </div>
+      <div className="flex flex-row justify-between gap-2">
+        <div className="flex gap-2">
+          <div className="flex h-11 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-600 shadow-sm">
+            <select
+              value={activeTab}
+              onChange={(e) => setActiveTab(e.target.value)}
+              className="bg-transparent font-medium text-slate-900 outline-none"
+            >
+              {tabs.map((tab) => (
+                <option key={tab} value={tab}>
+                  {tab}
+                </option>
+              ))}
+            </select>
+          </div>
 
-        <div className="flex flex-wrap items-center gap-2">
           <label className="flex h-11 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-600 shadow-sm">
             <span>Rows</span>
             <select
@@ -711,15 +711,16 @@ export function InventoryList() {
               ))}
             </select>
           </label>
-          <button
-            type="button"
-            onClick={() => setIsAddModalOpen(true)}
-            className="inline-flex h-11 items-center gap-2 rounded-xl bg-indigo-600 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700"
-          >
-            <Plus className="h-4 w-4" />
-            Add Item
-          </button>
         </div>
+
+        <button
+          type="button"
+          onClick={() => setIsAddModalOpen(true)}
+          className="inline-flex h-11 items-center gap-2 rounded-xl bg-indigo-600 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700"
+        >
+          <Plus className="h-4 w-4" />
+          New
+        </button>
       </div>
 
       <div className="hidden md:block rounded-xl bg-white shadow-sm">

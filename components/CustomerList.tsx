@@ -73,7 +73,13 @@ export function CustomerList() {
     setOpenMenuId,
   );
 
-  const { data = [], isLoading, isError, error, isFetching } = useQuery({
+  const {
+    data = [],
+    isLoading,
+    isError,
+    error,
+    isFetching,
+  } = useQuery({
     queryKey: ["customers", searchQuery],
     queryFn: () => fetchCustomers(searchQuery),
     enabled: isSupabaseConfigured,
@@ -182,9 +188,7 @@ export function CustomerList() {
             type="button"
             onClick={(e) => {
               e.stopPropagation();
-              setOpenMenuId((current) =>
-                current === row.id ? null : row.id,
-              );
+              setOpenMenuId((current) => (current === row.id ? null : row.id));
             }}
             className="inline-flex h-9 w-9 items-center justify-center rounded-full text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
             aria-label="Row actions"
@@ -307,17 +311,7 @@ export function CustomerList() {
         onClose={() => setDeleteTarget(null)}
       />
 
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-end">
-        <button
-          type="button"
-          onClick={openCreate}
-          disabled={!isSupabaseConfigured || saveMutation.isPending}
-          className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          <Plus className="h-4 w-4 shrink-0" />
-          Add customer
-        </button>
-
+      <div className="flex flex-row justify-between">
         <label className="flex h-11 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-600 shadow-sm">
           <span>Rows</span>
           <select
@@ -336,6 +330,16 @@ export function CustomerList() {
             ))}
           </select>
         </label>
+
+        <button
+          type="button"
+          onClick={openCreate}
+          disabled={!isSupabaseConfigured || saveMutation.isPending}
+          className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          <Plus className="h-4 w-4 shrink-0" />
+          New
+        </button>
       </div>
 
       {!isSupabaseConfigured && (

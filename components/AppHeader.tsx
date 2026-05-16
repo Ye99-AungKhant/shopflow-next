@@ -4,6 +4,7 @@ import { Search } from "lucide-react";
 import { logout } from "@/app/login/actions";
 import UserMenu from "./UserMenu";
 import { headerSearchActivePath, useAppSearch } from "./AppSearchContext";
+import Image from "next/image";
 
 type HeaderProps = {
   header: string;
@@ -30,7 +31,7 @@ export function AppHeader({ header, subheader, pathname }: HeaderProps) {
           <p className="text-sm text-slate-500">{subheader}</p>
         </div>
 
-        <div className="flex items-center gap-3 lg:ml-auto">
+        <div className="flex justify-between gap-3 lg:ml-auto">
           {showSearch ? (
             <label className="relative block min-w-[240px] flex-1 sm:w-72">
               <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
@@ -44,7 +45,23 @@ export function AppHeader({ header, subheader, pathname }: HeaderProps) {
                 className="h-11 w-full rounded-2xl bg-white pl-11 pr-4 text-sm text-slate-900 shadow-sm outline-none ring-1 ring-slate-200/70 transition placeholder:text-slate-400 focus:ring-2 focus:ring-indigo-500/30"
               />
             </label>
-          ) : null}
+          ) : (
+            <div className="flex items-center gap-1">
+              <Image
+                src="/logo.png"
+                alt="ShopFlow"
+                width={50}
+                height={50}
+                className="rounded-sm object-cover"
+              />
+              <div>
+                <p className="text-lg font-bold tracking-tight text-slate-900">
+                  ShopFlow
+                </p>
+                <p className="text-xs text-slate-500">Order operations hub</p>
+              </div>
+            </div>
+          )}
 
           <div className="flex items-center gap-3">
             <UserMenu logout={logout} />

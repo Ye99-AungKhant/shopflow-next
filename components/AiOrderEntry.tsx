@@ -30,6 +30,26 @@ export function AiOrderEntry() {
       role: "ai",
       text: "Hi! Describe an order to me, and I'll log it. For example: 'Mark ordered 2 coffees at $4 each and 1 pastry at $3 from the main bakery. He lives at 123 Main St and his number is 555-1234. Status is delivery.'",
     },
+    {
+      id: "2",
+      role: "ai",
+      text: "Hi! Describe an order to me, and I'll log it. For example: 'Mark ordered 2 coffees at $4 each and 1 pastry at $3 from the main bakery. He lives at 123 Main St and his number is 555-1234. Status is delivery.'",
+    },
+    {
+      id: "3",
+      role: "ai",
+      text: "Hi! Describe an order to me, and I'll log it. For example: 'Mark ordered 2 coffees at $4 each and 1 pastry at $3 from the main bakery. He lives at 123 Main St and his number is 555-1234. Status is delivery.'",
+    },
+    {
+      id: "4",
+      role: "ai",
+      text: "Hi! Describe an order to me, and I'll log it. For example: 'Mark ordered 2 coffees at $4 each and 1 pastry at $3 from the main bakery. He lives at 123 Main St and his number is 555-1234. Status is delivery.'",
+    },
+    {
+      id: "5",
+      role: "ai",
+      text: "Hi! Describe an order to me, and I'll log it. For example: 'Mark ordered 2 coffees at $4 each and 1 pastry at $3 from the main bakery. He lives at 123 Main St and his number is 555-1234. Status is delivery.'",
+    },
   ]);
   const [input, setInput] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
@@ -302,9 +322,9 @@ export function AiOrderEntry() {
   };
 
   return (
-    <div className="flex h-[80dvh] flex-col overflow-hidden bg-white md:m-4 md:rounded-3xl md:border md:border-slate-200 md:shadow-sm">
+    <div className="flex h-[calc(90dvh-2rem)] flex-col overflow-hidden bg-white md:m-4 md:h-[calc(90dvh-2rem)] md:rounded-3xl md:border md:border-slate-200 md:shadow-sm">
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-slate-100 bg-white px-4 py-3 shrink-0">
+      <div className="flex shrink-0 items-center justify-between border-b border-slate-100 bg-white px-4 py-3">
         <div className="flex items-center gap-2">
           <div className="relative">
             <div className="h-2.5 w-2.5 rounded-full bg-emerald-500" />
@@ -327,7 +347,7 @@ export function AiOrderEntry() {
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto bg-slate-50 px-3 py-4">
-        <div className="mx-auto flex w-full max-w-3xl flex-col justify-end gap-3">
+        <div className="flex w-full flex-col justify-end gap-3">
           {messages.map((m) => (
             <div
               key={m.id}
@@ -360,8 +380,10 @@ export function AiOrderEntry() {
       </div>
 
       {/* Input */}
-      <div className="border-t border-slate-100 bg-white p-2 pb-[calc(env(safe-area-inset-bottom)+12px)]">
-        <div className="mx-auto flex w-full max-w-3xl items-end gap-2 rounded-3xl border border-slate-200 bg-slate-50 p-2 focus-within:border-indigo-400 focus-within:ring-2 focus-within:ring-indigo-100">
+      {/* REMOVED: absolute bottom-0 right-0 left-0 */}
+      {/* ADDED: shrink-0 so it never compresses when messages get long */}
+      <div className="shrink-0 border-t border-slate-100 bg-white p-2">
+        <div className="flex w-full items-end gap-2 rounded-3xl border border-slate-200 bg-slate-50 p-2 focus-within:border-indigo-400 focus-within:ring-2 focus-within:ring-indigo-100">
           <textarea
             rows={1}
             value={input}

@@ -590,29 +590,22 @@ export function SettingList() {
         payment={selectedPayment}
       />
 
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-        <div className="flex flex-wrap items-center gap-2">
-          {tabs.map((tab) => {
-            const isActive = activeTab === tab.id;
+      <div className="flex flex-row justify-between gap-2">
+        <div className="flex gap-2">
+          <div className="flex h-11 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-600 shadow-sm">
+            <select
+              value={activeTab}
+              onChange={(e) => setActiveTab(e.target.value)}
+              className="bg-transparent font-medium text-slate-900 outline-none"
+            >
+              {tabs.map((tab) => (
+                <option key={tab.id} value={tab.id}>
+                  {tab.label}
+                </option>
+              ))}
+            </select>
+          </div>
 
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={cn(
-                  "rounded-full px-4 py-2 text-sm font-medium transition",
-                  isActive
-                    ? "bg-indigo-50 text-indigo-700 shadow-sm"
-                    : "text-slate-500 hover:bg-white hover:text-slate-900",
-                )}
-              >
-                {tab.label}
-              </button>
-            );
-          })}
-        </div>
-
-        <div className="flex flex-wrap items-center gap-2">
           <label className="flex h-11 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-600 shadow-sm">
             <span>Rows</span>
             <select
@@ -633,15 +626,15 @@ export function SettingList() {
               ))}
             </select>
           </label>
-          <button
-            type="button"
-            onClick={handleAddNew}
-            className="inline-flex h-11 items-center gap-2 rounded-xl bg-indigo-600 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700"
-          >
-            <Plus className="h-4 w-4" />
-            Add New
-          </button>
         </div>
+        <button
+          type="button"
+          onClick={handleAddNew}
+          className="inline-flex h-11 items-center gap-2 rounded-xl bg-indigo-600 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700"
+        >
+          <Plus className="h-4 w-4" />
+          New
+        </button>
       </div>
 
       {!isSupabaseConfigured && (
