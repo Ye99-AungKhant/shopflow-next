@@ -109,88 +109,77 @@ export function ViewOrderModal({
       <div className="p-6">
         <div className="grid gap-6 lg:grid-cols-3">
           <div className="space-y-5 lg:col-span-2">
-            <div className="overflow-hidden rounded-xl border border-slate-200">
-              {/* Header */}
-              <div className="grid grid-cols-4 items-center gap-4 border-b border-slate-200 bg-slate-50 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">
-                <div className="col-span-2">Product</div>
-                <div className="text-center">Qty</div>
-                <div className="text-right">Price (MMK)</div>
-              </div>
+            {/* Order Items List */}
+            <div className="flex flex-col gap-4">
+              {isLoading && (
+                <div className="rounded-2xl border border-slate-200 bg-white px-4 py-8 text-sm text-slate-500">
+                  Loading order items...
+                </div>
+              )}
 
-              {/* Body */}
-              <div className="divide-y divide-slate-100">
-                {isLoading && (
-                  <div className="px-4 py-8 text-sm text-slate-500">
-                    Loading order items...
+              {isError && (
+                <div className="rounded-2xl border border-slate-200 bg-white px-4 py-8 text-sm text-rose-500">
+                  {error instanceof Error
+                    ? error.message
+                    : "Failed to load order details."}
+                </div>
+              )}
+
+              {data?.items.map((item) => (
+                <div
+                  key={item.id}
+                  className="flex gap-4 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm transition-shadow hover:shadow-md"
+                >
+                  {/* Product Image Container */}
+                  <div className="flex h-28 w-24 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-slate-100 p-1">
+                    {item?.inventory?.photo_url ? (
+                      <Image
+                        src={item.inventory?.photo_url}
+                        width={100}
+                        height={100}
+                        alt={item.name}
+                        className="h-full w-full object-cover mix-blend-darken"
+                      />
+                    ) : (
+                      <Package className="h-6 w-6 text-slate-400" />
+                    )}
                   </div>
-                )}
 
-                {isError && (
-                  <div className="px-4 py-8 text-sm text-rose-500">
-                    {error instanceof Error
-                      ? error.message
-                      : "Failed to load order details."}
-                  </div>
-                )}
-
-                {data?.items.map((item) => (
-                  <div
-                    key={item.id}
-                    className="grid grid-cols-4 items-center gap-4 px-4 py-4"
-                  >
-                    {/* Product Column */}
-                    <div className="col-span-2 flex items-center gap-3">
-                      {/* <div className="h-12 w-12 shrink-0 rounded-lg bg-slate-200" /> */}
-                      {item?.inventory?.photo_url ? (
-                        <Image
-                          src={item.inventory?.photo_url}
-                          width={100}
-                          height={100}
-                          alt={item.name}
-                          className="rounded-sm object-cover"
-                        />
-                      ) : (
-                        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-200 text-slate-500">
-                          <Package className="h-5 w-5" />
-                        </div>
-                      )}
-                      <div className="min-w-0">
-                        <p className="truncate text-sm font-medium text-slate-900">
-                          {item.name}
-                        </p>
-                        <p className="truncate text-xs text-slate-500">
-                          {item.price} MMK
-                        </p>
-                      </div>
+                  {/* Product Details */}
+                  <div className="flex flex-1 flex-col py-1">
+                    <div className="flex-1">
+                      <h3 className="text-base font-bold text-slate-800">
+                        {item.name}
+                      </h3>
+                      <p className="mt-1 text-sm text-slate-500">
+                        (Quantity: {item.quantity})
+                      </p>
                     </div>
 
-                    {/* Quantity Column */}
-                    <div className="text-center text-sm text-slate-600">
-                      {item.quantity}
-                    </div>
-
-                    {/* Price Column */}
-                    <div className="text-right text-sm font-medium text-slate-900">
-                      {formatCurrency(item.price * item.quantity)}
+                    <div className="mt-auto pt-2">
+                      <p className="text-sm font-semibold text-slate-800">
+                        Price: MMK {formatCurrency(item.price * item.quantity)}
+                      </p>
                     </div>
                   </div>
-                ))}
-              </div>
+                </div>
+              ))}
             </div>
 
-            <div className="rounded-xl border border-slate-200 bg-slate-50/80 p-4">
+            {/* Order Totals */}
+            <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-5">
               <div className="flex items-center justify-between text-sm">
                 <span className="text-slate-500">Subtotal</span>
                 <span className="font-medium text-slate-900">
                   {formatCurrency(data?.totalPrice ?? 0)}
                 </span>
               </div>
-              <div className="mt-2 flex items-center justify-between text-sm">
+              <div className="mt-3 flex items-center justify-between text-sm">
                 <span className="text-slate-500">Shipping</span>
                 <span className="font-medium text-slate-900">0.00</span>
               </div>
               <div className="mt-4 flex items-center justify-between border-t border-slate-200 pt-4">
-                <span className="text-sm font-semibold text-slate-900">
+                <span className="text-base font-semibold text-slate-900">
                   Total
                 </span>
                 <span className="text-lg font-bold text-slate-900">
