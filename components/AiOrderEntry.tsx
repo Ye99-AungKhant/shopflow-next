@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useRef, useEffect } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { Send, Loader2 } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import { GoogleGenAI, Type } from "@google/genai";
@@ -21,7 +22,8 @@ const getAI = () => {
   return aiInstance;
 };
 
-export function AiOrderEntry({ onOrderAdded }: { onOrderAdded: () => void }) {
+export function AiOrderEntry() {
+  const queryClient = useQueryClient();
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "1",
@@ -265,7 +267,11 @@ export function AiOrderEntry({ onOrderAdded }: { onOrderAdded: () => void }) {
             text: result.response_message || "Order successfully logged!",
           },
         ]);
-        onOrderAdded();
+        void queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+        void queryClient.invalidateQueries({ queryKey: ["orders"] });
+        void queryClient.invalidateQueries({ queryKey: ["deliveries"] });
+        void queryClient.invalidateQueries({ queryKey: ["delivery-list"] });
+        void queryClient.invalidateQueries({ queryKey: ["customers"] });
       } else {
         setMessages((prev) => [
           ...prev,
@@ -383,8 +389,13 @@ export function AiOrderEntry({ onOrderAdded }: { onOrderAdded: () => void }) {
             onClick={handleSend}
             disabled={isProcessing || !input.trim()}
             className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-white transition hover:bg-indigo-700 disabled:opacity-50"
+            aria-label="Send message"
           >
-            <Send size={16} />
+            {isProcessing ? (
+              <Loader2 className="h-4 w-4 shrink-0 animate-spin" />
+            ) : (
+              <Send size={16} />
+            )}
           </button>
         </div>
 

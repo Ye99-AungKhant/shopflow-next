@@ -1,15 +1,17 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Package, Plus, Trash2 } from "lucide-react";
+import { Package, Plus, Trash2, Loader2, Search, ChevronDown } from "lucide-react";
 import { Modal } from "../ui/Modal";
 import {
   fetchOrderDetails,
   updateOrder,
   type OrderListRow,
 } from "../../lib/orders";
+// Make sure to import fetchInventory from your actual path
 import { InventoryItem } from "@/lib/supabase";
 import Image from "next/image";
+import { fetchInventory } from "../InventoryList";
 
 type EditOrderModalProps = {
   isOpen: boolean;
@@ -50,10 +52,18 @@ export function EditOrderModal({
   const [errorMessage, setErrorMessage] = useState("");
   const queryClient = useQueryClient();
 
+  // Fetch Order Details
   const { data, isLoading, isError, error } = useQuery({
     queryKey: ["order-details", order?.id],
     queryFn: () => fetchOrderDetails(order!.id),
     enabled: isOpen && Boolean(order?.id),
+  });
+
+  // Fetch Inventory Items
+  const { data: inventoryData, isLoading: isInventoryLoading } = useQuery({
+    queryKey: ["inventory"],
+    queryFn: fetchInventory,
+    enabled: isOpen,
   });
 
   useEffect(() => {
@@ -136,7 +146,8 @@ export function EditOrderModal({
     setItems((current) => current.filter((item) => item.id !== id));
   }
 
-  function addItem() {
+  // Adds a blank manual item
+  function addManualItem() {
     setItems((current) => [
       ...current,
       {
@@ -148,6 +159,36 @@ export function EditOrderModal({
         source: "manual",
       },
     ]);
+  }
+
+  // Adds an item directly from the fetched inventory
+  function addInventoryItem(invItem: InventoryItem) {
+    setItems((current) => {
+      const existingItem = current.find((i) => i.inventoryId === invItem.id);
+      
+      // If the item is already in the list, just increase the quantity
+      if (existingItem) {
+        return current.map((i) =>
+          i.inventoryId === invItem.id
+            ? { ...i, quantity: i.quantity + 1 }
+            : i
+        );
+      }
+
+      // Otherwise, add it as a new row
+      return [
+        ...current,
+        {
+          id: crypto.randomUUID(),
+          inventoryId: invItem.id,
+          name: invItem.name,
+          unitPrice: invItem.price,
+          quantity: 1,
+          source: "inventory",
+          inventory: invItem,
+        },
+      ];
+    });
   }
 
   return (
@@ -195,20 +236,6 @@ export function EditOrderModal({
                 </div>
               </div>
 
-              {/* <div>
-                <label className={fieldLabelClass}>Email Address</label>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(event) => setEmail(event.target.value)}
-                  disabled
-                  className={`${inputClass} cursor-not-allowed bg-slate-50 text-slate-400`}
-                />
-                <p className="mt-1 text-xs text-slate-400">
-                  Email is not stored in the current database schema.
-                </p>
-              </div> */}
-
               <div>
                 <label className={fieldLabelClass}>Phone Number</label>
                 <input
@@ -245,7 +272,7 @@ export function EditOrderModal({
                           width={100}
                           height={100}
                           alt={item.name}
-                          className="rounded-sm object-cover"
+                          className="h-12 w-12 rounded-sm object-cover"
                         />
                       ) : (
                         <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-200 text-slate-500">
@@ -319,23 +346,56 @@ export function EditOrderModal({
                 ))}
               </div>
 
-              <button
-                onClick={addItem}
-                className="mt-2 flex w-full items-center justify-center gap-2 rounded-lg border-2 border-dashed border-slate-200 py-2 font-medium text-indigo-600 transition hover:bg-indigo-50"
-              >
-                <Plus className="h-4 w-4" />
-                Add Item
-              </button>
-              <div className="mt-4 flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50 px-4 py-3">
+              {/* Add Item Actions */}
+              <div className="mt-4 flex flex-col gap-2">
+                <div className="relative">
+                  <select
+                    onChange={(e) => {
+                      const selectedId = e.target.value;
+                      if (!selectedId) return;
+                      
+                      const selectedItem = inventoryData?.find(
+                        (inv) => inv.id === selectedId
+                      );
+                      
+                      if (selectedItem) {
+                        addInventoryItem(selectedItem);
+                      }
+                      // Reset selection to default option
+                      e.target.value = "";
+                    }}
+                    defaultValue=""
+                    disabled={isInventoryLoading}
+                    // appearance-none hides the native OS arrow, allowing our custom icon to show
+                    className="w-full appearance-none cursor-pointer rounded-lg border-2 border-dashed border-indigo-200 bg-indigo-50 py-2.5 pl-4 pr-10 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    <option value="" disabled>
+                      {isInventoryLoading ? "Loading Inventory..." : "+ Add Item from Inventory"}
+                    </option>
+                    {inventoryData?.map((item) => (
+                      <option key={item.id} value={item.id}>
+                        {item.name} - {formatCurrency(item.price)} MMK
+                      </option>
+                    ))}
+                  </select>
+                  
+                  {/* Custom Dropdown Arrow */}
+                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
+                    <ChevronDown className="h-4 w-4 text-slate-400" />
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-6 flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50 px-4 py-3">
                 <span className="text-sm font-medium text-slate-600">
                   Order Total
                 </span>
-                <div className="flex flex-row">
+                <div className="flex flex-row items-baseline">
                   <span className="text-base font-semibold text-slate-900">
                     {formatCurrency(total)}
                   </span>
                   <div>
-                    <span className="text-xs text-slate-600 ml-1">MMK</span>
+                    <span className="ml-1 text-xs text-slate-600">MMK</span>
                   </div>
                 </div>
               </div>
@@ -376,8 +436,11 @@ export function EditOrderModal({
             });
           }}
           disabled={mutation.isPending || isLoading || isError}
-          className="rounded-lg bg-indigo-600 px-4 py-2 font-medium text-white shadow-sm transition hover:bg-indigo-700"
+          className="inline-flex items-center justify-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 font-medium text-white shadow-sm transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-70"
         >
+          {mutation.isPending ? (
+            <Loader2 className="h-4 w-4 shrink-0 animate-spin" />
+          ) : null}
           {mutation.isPending ? "Saving..." : "Save Changes"}
         </button>
       </div>

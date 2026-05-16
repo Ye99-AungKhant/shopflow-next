@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { AlertTriangle } from 'lucide-react';
+import { AlertTriangle, Loader2 } from 'lucide-react';
 import { Modal } from '../ui/Modal';
 import { deleteOrder, type OrderListRow } from '../../lib/orders';
 
@@ -78,7 +78,8 @@ export function DeleteOrderModal({ isOpen, onClose, order }: DeleteOrderModalPro
       <div className="flex justify-end gap-3 border-t border-slate-200 p-4">
         <button
           onClick={onClose}
-          className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+          disabled={mutation.isPending}
+          className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
         >
           Cancel
         </button>
@@ -88,8 +89,11 @@ export function DeleteOrderModal({ isOpen, onClose, order }: DeleteOrderModalPro
             mutation.mutate(order.id);
           }}
           disabled={!isConfirmed || mutation.isPending}
-          className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:bg-red-300"
+          className="inline-flex items-center justify-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:bg-red-300"
         >
+          {mutation.isPending ? (
+            <Loader2 className="h-4 w-4 shrink-0 animate-spin" />
+          ) : null}
           {mutation.isPending ? 'Deleting...' : 'Permanently Delete'}
         </button>
       </div>

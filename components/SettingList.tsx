@@ -1,5 +1,5 @@
 "use client";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowRightLeft,
@@ -9,6 +9,7 @@ import {
   Download,
   Edit,
   Eye,
+  Loader2,
   MapPin,
   MoreHorizontal,
   Package,
@@ -40,7 +41,6 @@ import {
 import { ColumnDef, DataTable } from "./ui/DataTable";
 import { MobileDataTable } from "./ui/MobileDataTable";
 import { useGetDeliveries } from "@/hooks/delivery";
-import { DeliverySettings } from "./settings/DeliverySettings";
 import { DeliveryModal } from "./settings/DeliveryModal";
 import { paymentMethodColumns } from "./settings/PaymentMethodColumn";
 import {
@@ -73,9 +73,8 @@ const tabs: { id: FilterTab; label: string }[] = [
   { id: "payment", label: "Payment Method" },
 ];
 
-export function SettingList({ refreshTrigger }: { refreshTrigger: number }) {
+export function SettingList() {
   const [activeTab, setActiveTab] = useState<FilterTab>("delivery");
-  const [searchValue, setSearchValue] = useState("");
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] =
     useState<(typeof pageSizeOptions)[number]>(10);
@@ -97,8 +96,11 @@ export function SettingList({ refreshTrigger }: { refreshTrigger: number }) {
   );
   const [copied, setCopied] = useState(false);
   const queryClient = useQueryClient();
-  const { mutate: paymentMuate, isPending: paymentPending } =
-    useUpdatePaymentStatusMutation();
+  const {
+    mutate: paymentMutate,
+    isPending: paymentPending,
+    variables: paymentToggleVars,
+  } = useUpdatePaymentStatusMutation();
 
   const updateDeliveryStatusMutation = useMutation({
     mutationFn: ({ id, enabled }: { id: string; enabled: boolean }) =>
@@ -108,9 +110,16 @@ export function SettingList({ refreshTrigger }: { refreshTrigger: number }) {
     },
   });
 
+  const isDeliveryTogglePending = (id: string) =>
+    updateDeliveryStatusMutation.isPending &&
+    updateDeliveryStatusMutation.variables?.id === id;
+
+  const isPaymentTogglePending = (id: string) =>
+    paymentPending && paymentToggleVars?.id === id;
+
   useEffect(() => {
     setPage(1);
-  }, [activeTab, searchValue, pageSize]);
+  }, [activeTab, pageSize]);
 
   useEffect(() => {
     function handlePointerDown(event: MouseEvent) {
@@ -180,7 +189,7 @@ export function SettingList({ refreshTrigger }: { refreshTrigger: number }) {
         enabled: newState,
       });
     } else {
-      paymentMuate({
+      paymentMutate({
         id: enableData.id,
         enabled: newState,
       });
@@ -221,20 +230,30 @@ export function SettingList({ refreshTrigger }: { refreshTrigger: number }) {
         return (
           <div className="flex items-center gap-3">
             <button
+              type="button"
+              disabled={isDeliveryTogglePending(deli.id)}
               onClick={() => handleToggle(deli)}
-              className={`
-            relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full 
-            transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2
-            ${deli.enabled ? "bg-indigo-600" : "bg-slate-200"}
-          `}
+              className={cn(
+                `relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-70`,
+                deli.enabled ? "bg-indigo-600" : "bg-slate-200",
+              )}
             >
-              <span
-                className={`
+              {isDeliveryTogglePending(deli.id) ? (
+                <Loader2
+                  className={cn(
+                    "absolute left-1/2 top-1/2 h-4 w-4 -translate-x-1/2 -translate-y-1/2 animate-spin",
+                    deli.enabled ? "text-white" : "text-indigo-600",
+                  )}
+                />
+              ) : (
+                <span
+                  className={`
               pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 
               transition duration-200 ease-in-out
               ${deli.enabled ? "translate-x-6" : "translate-x-1"}
             `}
-              />
+                />
+              )}
             </button>
             <span className="text-sm font-medium text-slate-700">
               {deli.enabled ? "Enabled" : "Disabled"}
@@ -287,20 +306,30 @@ export function SettingList({ refreshTrigger }: { refreshTrigger: number }) {
         return (
           <div className="flex items-center gap-3">
             <button
+              type="button"
+              disabled={isPaymentTogglePending(payment.id)}
               onClick={() => handleToggle(payment)}
-              className={`
-                relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full 
-                transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2
-                ${payment.enabled ? "bg-indigo-600" : "bg-slate-200"}
-              `}
+              className={cn(
+                `relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-70`,
+                payment.enabled ? "bg-indigo-600" : "bg-slate-200",
+              )}
             >
-              <span
-                className={`
+              {isPaymentTogglePending(payment.id) ? (
+                <Loader2
+                  className={cn(
+                    "absolute left-1/2 top-1/2 h-4 w-4 -translate-x-1/2 -translate-y-1/2 animate-spin",
+                    payment.enabled ? "text-white" : "text-indigo-600",
+                  )}
+                />
+              ) : (
+                <span
+                  className={`
                   pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 
                   transition duration-200 ease-in-out
                   ${payment.enabled ? "translate-x-6" : "translate-x-1"}
                 `}
-              />
+                />
+              )}
             </button>
             <span className="text-sm font-medium text-slate-700">
               {payment.enabled ? "Enabled" : "Disabled"}
@@ -400,20 +429,30 @@ export function SettingList({ refreshTrigger }: { refreshTrigger: number }) {
 
           <div className="flex flex-col items-end gap-1">
             <button
+              type="button"
+              disabled={isDeliveryTogglePending(deli.id)}
               onClick={() => handleToggle(deli)}
-              className={`
-            relative inline-flex h-5 w-10 shrink-0 cursor-pointer items-center rounded-full 
-            transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2
-            ${deli.enabled ? "bg-indigo-600" : "bg-slate-200"}
-          `}
+              className={cn(
+                `relative inline-flex h-5 w-10 shrink-0 cursor-pointer items-center rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-70`,
+                deli.enabled ? "bg-indigo-600" : "bg-slate-200",
+              )}
             >
-              <span
-                className={`
+              {isDeliveryTogglePending(deli.id) ? (
+                <Loader2
+                  className={cn(
+                    "absolute left-1/2 top-1/2 h-3.5 w-3.5 -translate-x-1/2 -translate-y-1/2 animate-spin",
+                    deli.enabled ? "text-white" : "text-indigo-600",
+                  )}
+                />
+              ) : (
+                <span
+                  className={`
               pointer-events-none inline-block h-3 w-3 transform rounded-full bg-white shadow ring-0 
               transition duration-200 ease-in-out
               ${deli.enabled ? "translate-x-6" : "translate-x-1"}
             `}
-              />
+                />
+              )}
             </button>
             <span className="text-[10px] font-bold uppercase tracking-tight text-slate-400">
               {deli.enabled ? "Active" : "Disable"}
@@ -464,20 +503,30 @@ export function SettingList({ refreshTrigger }: { refreshTrigger: number }) {
         {/* Status Toggle Group */}
         <div className="flex flex-col items-end gap-1">
           <button
+            type="button"
+            disabled={isPaymentTogglePending(payment.id)}
             onClick={() => handleToggle(payment)}
-            className={`
-          relative inline-flex h-5 w-10 shrink-0 cursor-pointer items-center rounded-full 
-          transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2
-          ${payment.enabled ? "bg-indigo-600" : "bg-slate-200"}
-        `}
+            className={cn(
+              `relative inline-flex h-5 w-10 shrink-0 cursor-pointer items-center rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-70`,
+              payment.enabled ? "bg-indigo-600" : "bg-slate-200",
+            )}
           >
-            <span
-              className={`
+            {isPaymentTogglePending(payment.id) ? (
+              <Loader2
+                className={cn(
+                  "absolute left-1/2 top-1/2 h-3.5 w-3.5 -translate-x-1/2 -translate-y-1/2 animate-spin",
+                  payment.enabled ? "text-white" : "text-indigo-600",
+                )}
+              />
+            ) : (
+              <span
+                className={`
             pointer-events-none inline-block h-3 w-3 transform rounded-full bg-white shadow ring-0 
             transition duration-200 ease-in-out
             ${payment.enabled ? "translate-x-6" : "translate-x-1"}
           `}
-            />
+              />
+            )}
           </button>
           <span className="text-[10px] font-bold uppercase tracking-tight text-slate-400">
             {payment.enabled ? "Active" : "Disable"}
@@ -564,16 +613,6 @@ export function SettingList({ refreshTrigger }: { refreshTrigger: number }) {
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          <label className="relative block w-full lg:w-80">
-            <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-            <input
-              type="text"
-              value={searchValue}
-              onChange={(event) => setSearchValue(event.target.value)}
-              placeholder="Search Orders"
-              className="h-11 w-full rounded-xl border border-slate-200 bg-white pl-11 pr-4 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-indigo-300 focus:ring-2 focus:ring-indigo-500/20"
-            />
-          </label>
           <label className="flex h-11 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-600 shadow-sm">
             <span>Rows</span>
             <select

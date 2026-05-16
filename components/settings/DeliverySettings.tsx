@@ -39,11 +39,7 @@ async function loadDeliveries() {
   return payload as DeliveryItem[];
 }
 
-export function DeliverySettings({
-  refreshTrigger,
-}: {
-  refreshTrigger: number;
-}) {
+export function DeliverySettings() {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -60,7 +56,7 @@ export function DeliverySettings({
     error,
     isFetching,
   } = useQuery<DeliveryItem[], Error>({
-    queryKey: ["delivery-list", refreshTrigger],
+    queryKey: ["delivery-list"],
     queryFn: loadDeliveries,
     keepPreviousData: true,
   });
@@ -184,9 +180,18 @@ export function DeliverySettings({
         <button
           type="button"
           onClick={() => deleteDeliveryMutation.mutate(item.id)}
-          className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-rose-600 transition hover:bg-rose-50"
+          disabled={
+            deleteDeliveryMutation.isPending &&
+            deleteDeliveryMutation.variables === item.id
+          }
+          className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-rose-600 transition hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-60"
         >
-          <Trash2 className="h-4 w-4" />
+          {deleteDeliveryMutation.isPending &&
+          deleteDeliveryMutation.variables === item.id ? (
+            <Loader2 className="h-4 w-4 shrink-0 animate-spin" />
+          ) : (
+            <Trash2 className="h-4 w-4 shrink-0" />
+          )}
           Delete
         </button>
       ),
@@ -224,9 +229,18 @@ export function DeliverySettings({
           <button
             type="button"
             onClick={() => deleteDeliveryMutation.mutate(delivery.id)}
-            className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-rose-600 transition hover:bg-rose-50"
+            disabled={
+              deleteDeliveryMutation.isPending &&
+              deleteDeliveryMutation.variables === delivery.id
+            }
+            className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-rose-600 transition hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            <Trash2 className="h-4 w-4" />
+            {deleteDeliveryMutation.isPending &&
+            deleteDeliveryMutation.variables === delivery.id ? (
+              <Loader2 className="h-4 w-4 shrink-0 animate-spin" />
+            ) : (
+              <Trash2 className="h-4 w-4 shrink-0" />
+            )}
             Delete
           </button>
         </div>
@@ -306,12 +320,12 @@ export function DeliverySettings({
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <button
                 type="submit"
-                disabled={createDeliveryMutation.isLoading}
+                disabled={createDeliveryMutation.isPending}
                 className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 text-sm font-semibold text-white transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60"
               >
-                {createDeliveryMutation.isLoading ? (
+                {createDeliveryMutation.isPending ? (
                   <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <Loader2 className="h-4 w-4 shrink-0 animate-spin" />
                     Saving...
                   </>
                 ) : (

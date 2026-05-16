@@ -1,6 +1,6 @@
 "use client";
 import { FormEvent, useRef, useState } from "react";
-import { ImagePlus, Plus } from "lucide-react";
+import { ImagePlus, Loader2 } from "lucide-react";
 import { Modal } from "./ui/Modal";
 import { supabase } from "../lib/supabase";
 import Image from "next/image";
@@ -190,17 +190,20 @@ export function AddItemModal({
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+            disabled={isSubmitting || uploading}
+            className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-70"
           >
             Cancel
           </button>
           <button
             type="submit"
             disabled={isSubmitting || uploading}
-            className="inline-flex items-center justify-center rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-70"
+            className="inline-flex items-center justify-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-70"
           >
-            {/* <Plus className="mr-2 h-4 w-4" /> */}
-            {uploading ? "Uploading..." : "Save"}
+            {uploading || isSubmitting ? (
+              <Loader2 className="h-4 w-4 shrink-0 animate-spin" />
+            ) : null}
+            {uploading ? "Uploading…" : isSubmitting ? "Saving…" : "Save"}
           </button>
         </div>
       </form>

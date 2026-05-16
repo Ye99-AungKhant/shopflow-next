@@ -8,7 +8,6 @@ import {
   PackagePlus,
   Pencil,
   Plus,
-  Search,
   Trash2,
 } from "lucide-react";
 import { AddItemModal } from "./AddItemModal";
@@ -19,6 +18,7 @@ import { InventoryItem, isSupabaseConfigured, supabase } from "../lib/supabase";
 import { cn, useAutoFlipDropdown } from "../lib/utils";
 import { ColumnDef, DataTable } from "./ui/DataTable";
 import { MobileDataTable } from "./ui/MobileDataTable";
+import { useAppSearch } from "./AppSearchContext";
 import Image from "next/image";
 
 const tabs = ["All Items", "Active", "Low Stock", "Out of Stock"] as const;
@@ -31,7 +31,7 @@ type InventoryRow = InventoryItem & {
   stockStatus: "healthy" | "low" | "out";
 };
 
-async function fetchInventory(): Promise<InventoryRow[]> {
+export async function fetchInventory(): Promise<InventoryRow[]> {
   if (!supabase) {
     return [];
   }
@@ -87,8 +87,8 @@ function renderStockBadge(item: InventoryRow) {
 }
 
 export function InventoryList() {
+  const { searchQuery } = useAppSearch();
   const [activeTab, setActiveTab] = useState<string>("All Items");
-  const [search, setSearch] = useState<string>("");
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] =
     useState<(typeof pageSizeOptions)[number]>(10);
@@ -277,7 +277,7 @@ export function InventoryList() {
   const filteredRows = useMemo(
     () =>
       inventoryRows.filter((row) => {
-        const searchTerm = search.toLowerCase();
+        const searchTerm = searchQuery.toLowerCase();
         const matchesSearch =
           row.name.toLowerCase().includes(searchTerm) ||
           (row.sku ?? "").toLowerCase().includes(searchTerm);
@@ -292,12 +292,12 @@ export function InventoryList() {
 
         return matchesSearch && matchesTab;
       }),
-    [activeTab, inventoryRows, search],
+    [activeTab, inventoryRows, searchQuery],
   );
 
   useEffect(() => {
     setPage(1);
-  }, [activeTab, search, pageSize]);
+  }, [activeTab, searchQuery, pageSize]);
 
   const pageCount = Math.ceil(filteredRows.length / pageSize);
 
@@ -691,16 +691,6 @@ export function InventoryList() {
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          <label className="relative block w-full sm:w-72">
-            <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-            <input
-              type="text"
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-              placeholder="Search products or SKUs..."
-              className="h-11 w-full rounded-xl border border-slate-200 bg-white pl-11 pr-4 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-indigo-300 focus:ring-2 focus:ring-indigo-500/20"
-            />
-          </label>
           <label className="flex h-11 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-600 shadow-sm">
             <span>Rows</span>
             <select

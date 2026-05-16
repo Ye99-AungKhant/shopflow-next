@@ -27,9 +27,9 @@ function formatCurrency(value: number) {
   return `${value.toFixed(2)}`;
 }
 
-export function Dashboard({ refreshTrigger }: { refreshTrigger: number }) {
+export function Dashboard() {
   const { data, isLoading, isError, error } = useQuery({
-    queryKey: ["dashboard", refreshTrigger],
+    queryKey: ["dashboard"],
     queryFn: fetchDashboardData,
     enabled: isSupabaseConfigured,
   });

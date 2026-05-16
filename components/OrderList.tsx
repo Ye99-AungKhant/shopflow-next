@@ -9,7 +9,6 @@ import {
   MoreHorizontal,
   Package,
   Printer,
-  Search,
   Trash2,
   XCircle,
 } from "lucide-react";
@@ -31,6 +30,7 @@ import {
 } from "../lib/utils";
 import { ColumnDef, DataTable } from "./ui/DataTable";
 import { MobileDataTable } from "./ui/MobileDataTable";
+import { useAppSearch } from "./AppSearchContext";
 
 type FilterTab = "all" | OrderStatus;
 const pageSizeOptions = [10, 50, 100] as const;
@@ -50,9 +50,9 @@ const tabs: { id: FilterTab; label: string }[] = [
   { id: "canceled", label: "Canceled" },
 ];
 
-export function OrderList({ refreshTrigger }: { refreshTrigger: number }) {
+export function OrderList() {
+  const { searchQuery } = useAppSearch();
   const [activeTab, setActiveTab] = useState<string>("all");
-  const [searchValue, setSearchValue] = useState("");
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] =
     useState<(typeof pageSizeOptions)[number]>(10);
@@ -71,7 +71,7 @@ export function OrderList({ refreshTrigger }: { refreshTrigger: number }) {
 
   useEffect(() => {
     setPage(1);
-  }, [activeTab, searchValue, pageSize]);
+  }, [activeTab, searchQuery, pageSize]);
 
   const openModal: OpenModal = (type, order, initialStatus) => {
     setSelectedOrder(order);
@@ -87,19 +87,12 @@ export function OrderList({ refreshTrigger }: { refreshTrigger: number }) {
   }
 
   const { data, isLoading, isError, error, isFetching } = useQuery({
-    queryKey: [
-      "orders",
-      refreshTrigger,
-      activeTab,
-      searchValue,
-      page,
-      pageSize,
-    ],
+    queryKey: ["orders", activeTab, searchQuery, page, pageSize],
     queryFn: () =>
       fetchOrders({
         page,
         pageSize,
-        search: searchValue,
+        search: searchQuery,
         status: activeTab,
       }),
     enabled: isSupabaseConfigured,
@@ -474,16 +467,6 @@ export function OrderList({ refreshTrigger }: { refreshTrigger: number }) {
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          <label className="relative block w-full lg:w-80">
-            <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-            <input
-              type="text"
-              value={searchValue}
-              onChange={(event) => setSearchValue(event.target.value)}
-              placeholder="Search Orders"
-              className="h-11 w-full rounded-xl border border-slate-200 bg-white pl-11 pr-4 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-indigo-300 focus:ring-2 focus:ring-indigo-500/20"
-            />
-          </label>
           <label className="flex h-11 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-600 shadow-sm">
             <span>Rows</span>
             <select

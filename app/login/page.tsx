@@ -1,17 +1,71 @@
 "use client";
 
 import { useState } from "react";
+import { useFormStatus } from "react-dom";
 import { login, signup } from "./actions";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import Image from "next/image";
 
+function LoginSubmitActions({
+  mode,
+  setMode,
+}: {
+  mode: "login" | "signup";
+  setMode: (mode: "login" | "signup") => void;
+}) {
+  const { pending } = useFormStatus();
+
+  return (
+    <>
+      <div className="flex flex-col items-center gap-4 pt-2 sm:flex-row">
+        <button
+          type="submit"
+          disabled={pending}
+          className="inline-flex w-full flex-1 items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-70"
+        >
+          {pending ? (
+            <Loader2 className="h-4 w-4 shrink-0 animate-spin text-white" />
+          ) : null}
+          {mode === "login" ? "Log in" : "Register"}
+        </button>
+      </div>
+      <div className="pt-2 text-center">
+        {mode === "login" ? (
+          <span className="text-sm text-slate-500">
+            Don&apos;t have an account?{" "}
+            <button
+              type="button"
+              disabled={pending}
+              className="font-semibold text-indigo-600 hover:underline disabled:cursor-not-allowed disabled:opacity-50 disabled:no-underline"
+              onClick={() => setMode("signup")}
+            >
+              Register
+            </button>
+          </span>
+        ) : (
+          <span className="text-sm text-slate-500">
+            Already have an account?{" "}
+            <button
+              type="button"
+              disabled={pending}
+              className="font-semibold text-indigo-600 hover:underline disabled:cursor-not-allowed disabled:opacity-50 disabled:no-underline"
+              onClick={() => setMode("login")}
+            >
+              Log in
+            </button>
+          </span>
+        )}
+      </div>
+    </>
+  );
+}
+
 export default function LoginPage() {
-  const [loading, setLoading] = useState<boolean>(false);
   const [showPassword, setShowPassword] = useState(false);
   const [mode, setMode] = useState<"login" | "signup">("login");
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 font-sans">
+    <div className="min-h-screen bg-slate-50 font-sans text-slate-900">
       <div className="mx-auto flex min-h-screen max-w-6xl items-center justify-center px-4">
         <div className="w-full max-w-2xl space-y-8 rounded-[2rem] border border-slate-200 bg-white p-8 shadow-xl shadow-slate-200/50 sm:p-10">
           {/* Header Section */}
@@ -43,11 +97,10 @@ export default function LoginPage() {
             <form
               className="space-y-6"
               action={async (formData) => {
-                setLoading(true);
                 if (mode === "login") {
-                  await login(formData).then(() => setLoading(false));
+                  await login(formData);
                 } else {
-                  await signup(formData).then(() => setLoading(false));
+                  await signup(formData);
                 }
               }}
             >
@@ -106,57 +159,21 @@ export default function LoginPage() {
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute inset-y-0 right-0 flex items-center pr-4 text-slate-400 hover:text-indigo-600 transition-colors focus:outline-none"
+                    className="absolute inset-y-0 right-0 flex items-center pr-4 text-slate-400 transition-colors hover:text-indigo-600 focus:outline-none"
                     aria-label={
                       showPassword ? "Hide password" : "Show password"
                     }
                   >
                     {showPassword ? (
-                      <EyeOff className="w-5 h-5" />
+                      <EyeOff className="h-5 w-5" />
                     ) : (
-                      <Eye className="w-5 h-5" />
+                      <Eye className="h-5 w-5" />
                     )}
                   </button>
                 </div>
               </div>
 
-              <div className="flex flex-col sm:flex-row items-center gap-4 pt-2">
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className={`inline-flex w-full flex-1 items-center justify-center gap-2 rounded-xl bg-indigo-600 text-white hover:bg-indigo-700 px-4 py-3 text-sm font-semibold shadow-sm transition disabled:cursor-not-allowed disabled:opacity-70`}
-                >
-                  {loading && (
-                    <Loader2 className={`h-4 w-4 animate-spin text-white`} />
-                  )}
-                  {mode === "login" ? "Log in" : "Register"}
-                </button>
-              </div>
-              <div className="pt-2 text-center">
-                {mode === "login" ? (
-                  <span className="text-sm text-slate-500">
-                    Don&apos;t have an account?{" "}
-                    <button
-                      type="button"
-                      className="text-indigo-600 hover:underline font-semibold"
-                      onClick={() => setMode("signup")}
-                    >
-                      Register
-                    </button>
-                  </span>
-                ) : (
-                  <span className="text-sm text-slate-500">
-                    Already have an account?{" "}
-                    <button
-                      type="button"
-                      className="text-indigo-600 hover:underline font-semibold"
-                      onClick={() => setMode("login")}
-                    >
-                      Log in
-                    </button>
-                  </span>
-                )}
-              </div>
+              <LoginSubmitActions mode={mode} setMode={setMode} />
             </form>
           </div>
         </div>

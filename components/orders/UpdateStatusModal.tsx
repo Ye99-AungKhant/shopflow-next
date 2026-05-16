@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { ArrowRightLeft } from 'lucide-react';
+import { ArrowRightLeft, Loader2 } from 'lucide-react';
 import { Modal } from '../ui/Modal';
 import { updateOrderStatus, type OrderListRow, type OrderStatus } from '../../lib/orders';
 import { cn } from '../../lib/utils';
@@ -115,7 +115,8 @@ export function UpdateStatusModal({
       <div className="flex justify-end gap-3 border-t border-slate-200 p-4">
         <button
           onClick={onClose}
-          className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+          disabled={mutation.isPending}
+          className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
         >
           Cancel
         </button>
@@ -125,9 +126,13 @@ export function UpdateStatusModal({
             mutation.mutate({ orderId: order.id, status: selectedStatus });
           }}
           disabled={mutation.isPending}
-          className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-indigo-700"
+          className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-70"
         >
-          <ArrowRightLeft className="h-4 w-4" />
+          {mutation.isPending ? (
+            <Loader2 className="h-4 w-4 shrink-0 animate-spin" />
+          ) : (
+            <ArrowRightLeft className="h-4 w-4 shrink-0" />
+          )}
           {mutation.isPending ? 'Saving...' : 'Save Status'}
         </button>
       </div>

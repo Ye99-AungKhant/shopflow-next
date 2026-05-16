@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { Loader2 } from "lucide-react";
 import { Modal } from "../ui/Modal";
 import { createDelivery, updateDelivery } from "../../lib/delivery";
 import { Delivery } from "@/lib/supabase";
@@ -201,8 +202,11 @@ export function DeliveryModal({
         <button
           onClick={handleSubmit}
           disabled={isPending}
-          className="rounded-lg bg-indigo-600 px-4 py-2 font-medium text-white shadow-sm transition hover:bg-indigo-700 disabled:opacity-50"
+          className="inline-flex items-center justify-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 font-medium text-white shadow-sm transition hover:bg-indigo-700 disabled:opacity-50"
         >
+          {isPending ? (
+            <Loader2 className="h-4 w-4 shrink-0 animate-spin" />
+          ) : null}
           {isPending
             ? "Saving..."
             : isEdit

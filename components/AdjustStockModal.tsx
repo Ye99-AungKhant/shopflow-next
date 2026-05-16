@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, Loader2 } from "lucide-react";
 import { Modal } from "./ui/Modal";
 
 type AdjustmentType = "add" | "subtract" | "set";
@@ -127,7 +127,8 @@ export function AdjustStockModal({
         <button
           type="button"
           onClick={onClose}
-          className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+          disabled={isSubmitting}
+          className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
         >
           Cancel
         </button>
@@ -137,9 +138,12 @@ export function AdjustStockModal({
             onConfirm({ type: adjustmentType, amount: safeQuantity })
           }
           disabled={isSubmitting || safeQuantity <= 0}
-          className="inline-flex items-center justify-center rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60"
+          className="inline-flex items-center justify-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60"
         >
-          Confirm Adjustment
+          {isSubmitting ? (
+            <Loader2 className="h-4 w-4 shrink-0 animate-spin" />
+          ) : null}
+          {isSubmitting ? "Applying…" : "Confirm Adjustment"}
         </button>
       </div>
     </Modal>
