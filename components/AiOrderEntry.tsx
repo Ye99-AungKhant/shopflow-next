@@ -54,6 +54,7 @@ export function AiOrderEntry() {
   const [input, setInput] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
   const [userId, setUserId] = useState<string | undefined>();
 
   useEffect(() => {
@@ -75,61 +76,6 @@ export function AiOrderEntry() {
 
     try {
       const ai = getAI();
-      // Create schema for JSON output
-      const schema = {
-        type: Type.OBJECT,
-        properties: {
-          confidence: {
-            type: Type.STRING,
-            description:
-              "High if the user clearly described an order, Low if it's just chit-chat.",
-          },
-          response_message: {
-            type: Type.STRING,
-            description:
-              "A friendly conversational response back to the user acknowledging what was done or asking for clarification.",
-          },
-          order_data: {
-            type: Type.OBJECT,
-            description:
-              "The extracted order data. Leave empty if confidence is Low.",
-            properties: {
-              customer: {
-                type: Type.OBJECT,
-                properties: {
-                  name: { type: Type.STRING },
-                  phone: { type: Type.STRING },
-                  address: { type: Type.STRING },
-                },
-                required: ["name"],
-              },
-              items: {
-                type: Type.ARRAY,
-                items: {
-                  type: Type.OBJECT,
-                  properties: {
-                    inventory_id: {
-                      type: Type.STRING,
-                      description:
-                        "If the item strictly matches one of the available inventory items, provide its UUID here.",
-                    },
-                    name: { type: Type.STRING },
-                    quantity: { type: Type.NUMBER },
-                    price: { type: Type.NUMBER },
-                    source: { type: Type.STRING },
-                  },
-                  required: ["name", "quantity", "price"],
-                },
-              },
-              status: {
-                type: Type.STRING,
-                description: "Must be exactly 'delivery' or 'completed'",
-              },
-            },
-          },
-        },
-        required: ["confidence", "response_message"],
-      };
 
       // Fetch available inventory so AI can match IDs and prices
       const { data: inventoryData } = await supabase
@@ -321,6 +267,17 @@ export function AiOrderEntry() {
     }
   };
 
+  // Add this alongside your other state/refs
+
+  // Update your auto-scroll useEffect:
+  useEffect(() => {
+    if (messagesContainerRef.current) {
+      // This tells ONLY the message container to scroll to its absolute bottom
+      messagesContainerRef.current.scrollTop =
+        messagesContainerRef.current.scrollHeight;
+    }
+  }, [messages, isProcessing]);
+
   return (
     <div className="flex h-[calc(90dvh-2rem)] flex-col overflow-hidden bg-white md:m-4 md:h-[calc(90dvh-2rem)] md:rounded-3xl md:border md:border-slate-200 md:shadow-sm">
       {/* Header */}
@@ -346,8 +303,11 @@ export function AiOrderEntry() {
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto bg-slate-50 px-3 py-4">
-        <div className="flex w-full flex-col justify-end gap-3">
+      <div
+        className="flex-1 overflow-y-auto bg-slate-50 px-3 py-4"
+        ref={messagesContainerRef}
+      >
+        <div className="flex w-full flex-col gap-3">
           {messages.map((m) => (
             <div
               key={m.id}
@@ -375,7 +335,7 @@ export function AiOrderEntry() {
             </div>
           )}
 
-          <div ref={messagesEndRef} />
+          {/* <div ref={messagesEndRef} /> */}
         </div>
       </div>
 
